@@ -1,0 +1,250 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9f9f9;
+  color: #333;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  position: sticky;
+  top: 0;
+  /* position: fixed; */
+  justify-content: space-between;
+  background-color: white;
+  /* min-width: 100vw; */
+  align-items: center;
+  /* padding: 0 2rem; */
+  z-index: 999;
+  /* margin:0 2rem; */
+}
+
+.picture-with-name {
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+}
+.notification-and-picture {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.avatar-and-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dropdown-menu {
+  height: 12rem;
+  width: 12rem;
+  background-color: white;
+  border-radius: 1.6rem;
+  /* margin:2rem; */
+  margin-top: 2rem;
+  margin-right: 3rem;
+  /* display: block;
+  justify-content: center;
+  align-items: center; */
+  padding: 0.6rem;
+  position: absolute;
+  cursor: "pointer";
+  /* right:0; */
+  transform: translateX(-100%);
+
+  z-index: 1000;
+
+  /* border: 1px solid rgb(52, 47, 47); */
+  box-shadow: 2px 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown-menu i {
+  padding: 0.8rem;
+}
+.dropdown-menu > div:not(:first-child):hover {
+  border: 1px solid #c3bdbd;
+  border-radius: 1rem;
+  background-color: #f5f1f1;
+  background-color: rgb(205, 200, 215);
+}
+
+.dropdown-menu .dropdown-option {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.patient-dashboard {
+  display: flex;
+  justify-content: space-between;
+}
+.docterSel-cale {
+  display: flex;
+  padding: 1rem;
+  /* background-color: red; */
+  margin: 1rem 1rem 1rem 0;
+  width: 100%;
+}
+.calender {
+  width: 100%;
+  /* background-color: red; */
+  padding: 1rem 1rem 0 2rem;
+  overflow: hidden;
+
+  overflow-x: auto;
+  border: 1px solid rgb(216, 214, 222);
+  border-radius: 1rem;
+  margin-left: 1rem;
+}
+.all-doctors-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+.docIcon-details {
+  display: flex;
+  width: 47%;
+  overflow: hidden;
+  overflow-x: auto;
+  /* justify-content: space-between; */
+  /* align-items: center; */
+  margin-top: 1rem;
+
+  border: 1px solid rgb(232, 227, 227);
+  border-radius: 1rem;
+  padding: 1rem;
+}
+.docter-details {
+  width: 100%;
+  box-sizing: border-box;
+}
+.rating-Expe {
+  display: flex;
+}
+/* .available-selectbtn Button{
+  ;
+} */
+.department,
+.rating,
+.experience {
+  font-size: 0.8rem;
+  display: flex;
+  justify-content: space-evenly;
+
+  padding: 0.4rem;
+}
+.available-selectbtn {
+  display: flex;
+  justify-content: space-between;
+
+  /* align-content: center; */
+}
+.patientsearchBarr {
+  padding: 0.4rem;
+  border: 1px solid rgb(169, 162, 162, 0.3);
+  width: 70%;
+  border-radius: 1rem;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.seracbar-department {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.docterSelection {
+  /* background-color: rgb(130, 123, 123); */
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgb(216, 214, 222);
+}
+.profiledetls{
+  margin: 2rem;
+
+}
+.row{
+  display: flex;
+  gap:5rem;
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+}
+.field{
+  flex:1;
+  display: flex;
+  flex-direction: column; 
+}
+.row .field input{
+  padding: 0.8rem;
+  background-color: white;
+  border-radius: 0.8rem;
+  color: black;
+  font-size: 1rem;
+  font-weight: 600;
+ 
+}
+
+.symtomsSub {
+  display: flex;
+  flex-direction: column;
+  width: 60%;
+  border: 1px solid #c3bdbd;
+  margin-bottom: 2rem;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  border-radius: 1rem;
+}
+.appointmentContainer {
+  display: flex;
+  flex-direction: column;
+  width: 40%;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 3rem;
+  border: 1px solid #c3bdbd;
+  overflow: hidden;
+
+  border-radius: 1rem;
+  margin-left: 1rem;
+  margin-bottom: 2rem;
+}
+
+.appointmentSchedule {
+  width: 100%;
+  margin: 1rem;
+  border: 1px solid #c3bdbd;
+  border-radius: 1rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  overflow-x: auto;
+  padding: 1rem;
+  /* background-color:rgb(167, 167, 189) ; */
+}
+.sound-wave {
+  height: 4rem;
+  width: 100%;
+  margin-top: 1rem;
+  /* background-color: ; */
+}
+/* .UserIcon {
+  color: blue;
+  
+  background-color: rgb(149, 149, 157);
+  padding: 1rem;
+} */
+
+
+.item:hover {
+  background-color: #e0e0e0;
+}

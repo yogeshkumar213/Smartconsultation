@@ -1,0 +1,121 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9f9f9;
+  color: #333;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+.card .all3card{
+  margin-right: 1rem;
+}
+.header {
+  display: flex;
+  position: sticky;
+  top: 0;
+ /* position: fixed; */
+  justify-content: space-between;
+  background-color: white;
+  /* min-width: 100vw; */
+  align-items: center;
+  /* padding: 0 2rem; */
+  z-index: 999;
+  /* margin:0 2rem; */
+}
+
+
+.picture-with-name {
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+}
+.notification-and-picture {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.avatar-and-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dropdown-menu {
+  height: 12rem;
+  width: 12rem;
+  background-color: white;
+  border-radius: 1.6rem;
+  /* margin:2rem; */
+  margin-top: 2rem;
+  margin-right: 3rem;
+  padding: 0.6rem;
+  position: absolute;
+  cursor: "pointer";
+  /* right:0; */
+  transform: translateX(-100%);
+
+  z-index: 1000;
+
+  /* border: 1px solid rgb(52, 47, 47); */
+  box-shadow: 2px 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown-menu i {
+  padding: 0.8rem;
+ 
+}
+.dropdown-menu > div:not(:first-child):hover {
+  border: 1px solid #f5f1f1;
+  border-radius: 1rem;
+  background-color: #f5f1f1;
+}
+.dropdown-menu > div:not(:first-child){
+  /* display: grid; */
+}
+.dropdown-menu .dropdown-option{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+}
+
+.hospitalname {
+  color: blue;
+}
+.card {
+  /* width: 100vw; */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 1rem;
+
+  /* box-shadow: 2rem 4rem 4rem rgba(0, 0, 0, 0.2); */
+}
+
+
+.card div {
+  height: 7.7rem;
+  width: 28rem;
+  padding: 1rem 1.5rem;
+  border: 1px solid rgb(169, 162, 162,0.3);
+  border-radius: 1rem;
+  /* box-shadow:1px 2px 2rem  rgb(164, 159, 159) ; */
+  justify-content: space-between;
+}
+
+.searchBarr{
+  padding: 0.8rem;
+   border: 1px solid rgb(169, 162, 162,0.3);
+    /* width: 100vw; */
+    border-radius:1rem;
+    display: flex;
+    align-items: center;
+}
