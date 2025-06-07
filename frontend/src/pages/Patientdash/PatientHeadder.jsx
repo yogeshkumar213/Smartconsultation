@@ -1,4 +1,4 @@
-import React, { useEffect, useState,useNavigate } from "react";
+import React, { useEffect, useState, useNavigate } from "react";
 
 import Badge from "@mui/material/Badge";
 import MailIcon from "@mui/icons-material/Mail";
@@ -12,7 +12,7 @@ import "./Patientdash.css";
 
 export default function PatientHeader() {
   const [zoneTriggered, setZoneTriggered] = useState(false);
-    const navigate = useNavigate;
+  const navigate = useNavigate;
   const [border, setborder] = useState(false);
   const [username, setUserName] = useState("");
   const [email, setEmail] = useState("");
@@ -81,24 +81,9 @@ export default function PatientHeader() {
               className="fa-solid fa-chevron-up"
               style={{ paddingRight: "1rem" }}
             ></i>
-            {border && (
-              <Dropdown
-                // zoneTriggered={zoneTriggered}
-                // onTriggerZone={() => {
-                //   console.log("Parent: setting zoneTriggered to true");
-                //   setZoneTriggered(true);
-                // }}
-                // onMyAccount={() => {
-                //   console.log("Navigating to /User-dashboard");
-                //   navigate("/User-dashboard");
-                // }}
-                // onLogout={() => {
-                //   console.log("Logging out");
-                //   localStorage.removeItem("token");
-                //   navigate("/auth/signin");
-                // }}
-              />
-            )}
+            <Dropdown visible={border} />
+            {/* {border && (
+            )} */}
           </div>
         </div>
       </span>

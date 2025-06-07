@@ -24,33 +24,33 @@ async function main() {
 
 
 const isAuthenticated = ((req, res, next) => {
-    try{
+    try {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
         console.log("middleware is called");
         console.log(token);
         console.log(authHeader);
-    
+
         if (!token) {
             return res.status(401).json({ message: "Access token is not found" })
         }
-    
-        jwt.verify(token,process.env.SECRET_KEY, (err, decoded) => {
+
+        jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
             if (err) {
                 return res.status(403).json({ message: "invalid or expired token" })
             }
             else {
-                console.log("decode",decoded)
+                console.log("decode", decoded)
                 req.user = decoded;
                 next();
             }
-    
+
         })
     }
-    catch(err){
+    catch (err) {
         console.log(err);
     }
-   
+
 
 })
 let usersignup = async (req, res) => {
@@ -101,10 +101,10 @@ let userLogin = async (req, res) => {
     try {
         const existUser = await User.findOne({ Email: Email })
         if (!existUser) {
+            console.log("result sended ")
             return res.status(401).json({ message: "email is not exist" })
+
         }
-
-
         console.log("req come in backend in user login");
         console.log(existUser);
         const isMatch = await bcrypt.compare(Password, existUser.Password);
@@ -124,7 +124,7 @@ let userLogin = async (req, res) => {
     }
     catch (err) {
         console.log(err);
-        res.status(501).json({ message: "some another issue" })
+        return res.status(501).json({ message: "some another issue" })
     }
 }
 
@@ -164,7 +164,7 @@ let doctersignup = async (req, res) => {
             Email: Email,
             Specilization: Specilization,
             Licenseno: Licenseno
-        }, process.env.SECRET_KEY, { expiresIn: "1h" });
+        }, process.env.SECRET_KEY, { expiresIn: "24h" });
         console.log(token);
 
         return res.status(201).json({ message: "docter registered successfully", token, data })
@@ -201,9 +201,9 @@ const docterLogin = async (req, res) => {
 
         const token = jwt.sign(
             {
-                DocterName: existDocter.DocterName,
-                Email: Email,
-                Licenseno: Licenseno
+                Email: existDocter.Email,
+                Specilization:existDocter.Specilization,
+              
             },
             process.env.SECRET_KEY,
             { expiresIn: "1h" }
@@ -212,7 +212,7 @@ const docterLogin = async (req, res) => {
         return res.status(200).json({
             message: "Doctor successfully logged in",
             existDocter,
-            token
+            doctoken:token
         });
 
     } catch (err) {
@@ -221,6 +221,6 @@ const docterLogin = async (req, res) => {
     }
 };
 
-export { userLogin, doctersignup, usersignup, docterLogin,isAuthenticated };
+export { userLogin, doctersignup, usersignup, docterLogin, isAuthenticated };
 
 

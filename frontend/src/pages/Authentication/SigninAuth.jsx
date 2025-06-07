@@ -63,17 +63,16 @@ export default function Authentication() {
           alert("Email,Password,Licenseno are required");
           return;
         }
-        // console.log("email",Email)
+        console.log("email",Email);
+        console.log("password",Password)
         const Authdocterreq = await docterLogin(Email, Password, Licenseno);
-        // setTimeout((Authdocterreq)=>{
-        //   console.log(Authdocterreq);
-        // },5000);
+      
         console.log(Authdocterreq);
 
         showSnakbar(Authdocterreq);
       }
     } catch (err) {
-      // debugger;
+     
       showSnakbar(err.response.data.message)
       console.log(err);
     }
@@ -136,9 +135,9 @@ export default function Authentication() {
               id="Email"
               value={Email}
               label="Email Address"
-              name="email"
+              name="Email"
               onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
+              autoComplete="Email"
               autoFocus
             />
             <TextField

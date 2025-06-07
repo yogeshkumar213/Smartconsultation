@@ -6,12 +6,12 @@ const upload = multer({ dest: 'uploads/' })
 import status from "http-status";
 
 import { usersignup, doctersignup, userLogin, docterLogin, isAuthenticated } from "../controllers/mongoManeger.js"
-import { getDocterList, getappointDate, appointment,getuserprofile ,updateuserdata} from "../controllers/userdashreq.js";
+import { getDocterList, getappointDate, appointment,getuserprofile ,updateuserdata,patdel} from "../controllers/userdashreq.js";
 // import { Appointment } from "../models/appointment.js";
 
 const router = express.Router();
 
-
+router.delete("/pat/permdel",isAuthenticated,patdel);
 router.patch("/updatedata",isAuthenticated,updateuserdata);
 router.post("/appointment", isAuthenticated, upload.fields([
     { name: 'PatientAudio', maxCount: 1 },

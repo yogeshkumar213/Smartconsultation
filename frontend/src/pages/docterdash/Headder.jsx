@@ -7,11 +7,23 @@ import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
 import Avatar from "@mui/material/Avatar";
 import Dropdown from "./Dropdown";
 import Stack from "@mui/material/Stack";
-
+import { jwtDecode } from "jwt-decode";
 import "./Headder.css";
+import { useEffect } from "react";
 
 export default function DocterHeadder() {
   const [border, setborder] = useState(false);
+  const [docter, setDocter] = useState({});
+
+  useEffect(() => {
+    console.log("token is arrived");
+    const docToken = localStorage.getItem("doctoken");
+    if (docToken) {
+      const decode = jwtDecode(docToken);
+      setDocter(decode);
+      console.log(decode);
+    }
+  }, []);
 
   let clickHandler = () => {
     setborder((prevalue) => !prevalue);
@@ -21,7 +33,7 @@ export default function DocterHeadder() {
     <>
       <span className="header">
         <div className="hospitalname ">
-          <h2>hospital name</h2>
+          <h2>VitalCare Medical Hub</h2>
         </div>
 
         <div className="notification-and-picture">
@@ -54,9 +66,9 @@ export default function DocterHeadder() {
             &nbsp;
             <div>
               <div>
-                <b>Dr sarah johnshan</b>
+                <b>{docter.Email}</b>
               </div>
-              <div style={{ fontSize: "0.8rem" }}>General medicine</div>
+              <div style={{ fontSize: "0.8rem" }}>{docter.Specilization}</div>
             </div>
             &nbsp; &nbsp;
             <i

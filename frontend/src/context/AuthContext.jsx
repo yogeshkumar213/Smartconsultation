@@ -25,7 +25,6 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-
 export const AuthProvider = ({ children }) => {
   const [User, setUser] = useState(" ");
   const navigate = useNavigate();
@@ -56,7 +55,6 @@ export const AuthProvider = ({ children }) => {
         console.log("user registered successfully");
         console.log(request.data.token);
 
-       
         localStorage.setItem("token", request.data.token);
         setUser(decodeJWT(request.data.token));
         navigate("/User-dashboard");
@@ -74,33 +72,35 @@ export const AuthProvider = ({ children }) => {
   };
   const userLogin = async (Email, Password) => {
     console.log("request go");
+    console.log(Email);
+    console.log(Password);
     try {
       // console.log("userLogin fuction called in frontend");
       let request = await client.post("/userlogin", {
         Password,
         Email,
-      });
-      console.log("request is come");
-      console.log(request);
+      })
+      console.log(request)
+
       if (request.status == 200) {
         console.log("user found");
         console.log(request.data.token);
         localStorage.setItem("patientid", request.data.existUser._id);
 
-       
         console.log(request);
         localStorage.setItem("token", request.data.token);
         setUser(decodeJWT(request.data.token));
         navigate("/User-dashboard");
         return request.data.message;
-      }
+      } 
     } catch (err) {
-      if (err.response && err.response.status == 401) {
-        console.log(err);
-        return request.data.message;
-      } else {
-        return "some other issue", err;
-      }
+      return err.response.data.message;
+      // if (err.response && err.response.status == 401) {
+      //   console.log(err);
+      //   return request.data.message;
+      // } else {
+      //   return "some other issue", err;
+      // }
     }
   };
 
@@ -125,7 +125,7 @@ export const AuthProvider = ({ children }) => {
         // console.log(docterreq);
         console.log(docterreq.data);
         setUser(decodeJWT(docterreq.data.token));
-        localStorage.setItem("token", docterreq.data.token);
+        localStorage.setItem("doctoken", docterreq.data.token);
         navigate("/docter-dashboard");
         return docterreq.data.message;
       }
@@ -139,8 +139,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const docterLogin = async (Password, Email, Licenseno) => {
+  const docterLogin = async (Email, Password, Licenseno) => {
     console.log("request go");
+   
+    console.log(Password);
+     console.log(Email);
     try {
       let request = await client.post("/docterlogin", {
         Email,
@@ -151,8 +154,8 @@ export const AuthProvider = ({ children }) => {
       console.log(request);
 
       if (request.status == 200) {
-        localStorage.setItem("token", request.data.token);
-        setUser(decodeJWT(request.data.token));
+        localStorage.setItem("doctoken", request.data.doctoken);
+        setUser(decodeJWT(request.data.doctoken));
         navigate("/docter-dashboard");
         return request.data.message;
       } else if (request.status == 404) {
@@ -160,7 +163,7 @@ export const AuthProvider = ({ children }) => {
         return request.data.message;
       }
     } catch (err) {
-      debugger;
+      // debugger;
       console.log(err.message);
       return err.message;
     }
