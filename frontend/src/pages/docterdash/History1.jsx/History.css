@@ -1,0 +1,13 @@
+td{
+    padding: 0.5rem 2rem 0.5rem ;
+}
+/* This will override the autofill background in Chrome/Edge */
+.MuiInputBase-input:-webkit-autofill {
+  box-shadow: 0 0 0 1000px white inset !important; /* Use your background color */
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  -webkit-text-fill-color: #000 !important;
+  caret-color: black !important;
+}
+
+
+

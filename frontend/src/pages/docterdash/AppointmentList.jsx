@@ -1,8 +1,8 @@
 import React from "react";
 import CurrPatientInfo from "./CurrPatientInfo";
 
-import "./AppointmentList.css";
-import CurrAppointdetails from "./CurrAppointdetails";
+import "../../../../frontend/src/pages/docterdash/AppointmentList.css";
+import CurrAppointdetails from "./NextAppointments/CurrAppointdetails.jsx";
 export default function () {
   return <div className="Appointment">
 

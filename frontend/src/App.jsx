@@ -16,8 +16,12 @@ import { SnakbarProvider } from "./context/Snakbarr.jsx";
 import { DepartmentProvider } from "./pages/Patientdash/Department.jsx";
 import { SearchProvider } from "./pages/Patientdash/Searchbar.jsx";
 import { PatientFormProvider } from "./context/PatientFormContext.jsx";
+import { DocterProfile } from "./pages/docterdash/DocterProfile/DocterProfile.jsx";
+import { DocterProfileEdit } from "./pages/docterdash/DocterProfile/DocterProfileEdit.jsx";
+import { DocterContextProvider } from "./context/DocterAuthContext.jsx";
+import { Logout } from "./pages/docterdash/DocterProfile/Logout.jsx";
+// import { History } from "./pages/docterdash/History1.jsx/History.jsx";
 import "./App.css";
-
 
 function App() {
   return (
@@ -31,23 +35,40 @@ function App() {
               <DepartmentProvider>
                 <SearchProvider>
                   <DropdownProvider>
-                  {/* <Test/> */}
-                    <Routes>
-                      <Route
-                        path="/user-profile"
-                        element={<ProfileDetails />}
-                      ></Route>
-                      {/* <Route path="/dropdown" element={<Dropdown />}></Route> */}
-                      <Route
-                        path="/docter-dashboard"
-                        element={<DocterDash />}
-                      ></Route>
-                      <Route
-                        path="/user-dashboard"
-                        element={<PatientDash />}
-                      ></Route>
-                      <Route path="/auth/*" element={<AuthParent />}></Route>
-                    </Routes>
+                    <DocterContextProvider>
+                      {/* <Test/> */}
+                      <Routes>
+                        <Route
+                          path="/user-profile"
+                          element={<ProfileDetails />}
+                        ></Route>
+                        {/* <Route path="/dropdown" element={<Dropdown />}></Route> */}
+                        <Route
+                          path="/docter-dashboard"
+                          element={<DocterDash />}
+                        ></Route>
+                        <Route
+                          path="/user-dashboard"
+                          element={<PatientDash />}
+                        ></Route>
+                        <Route path="/auth/*" element={<AuthParent />}></Route>
+
+                        {/* docter routes */}
+
+                        <Route
+                          path="/docter-profile"
+                          element={<DocterProfile />}
+                        ></Route>
+                        <Route
+                          path="/docter-profile-edit"
+                          element={<DocterProfileEdit />}
+                        ></Route>
+                        <Route path="/doc-logout" element={<Logout />}>
+                          {" "}
+                        </Route>
+                        {/* <Route path="/history" element={<History/>}></Route> */}
+                      </Routes>
+                    </DocterContextProvider>
                   </DropdownProvider>
                 </SearchProvider>
               </DepartmentProvider>

@@ -20,7 +20,7 @@ export const AudioRecorderComponent = () => {
   const fileInput = useRef(null);
   const { showSnakbar } = useSnackbar();
   const { client } = useAuth();
-  const navigae = useNavigate();
+  const navigate = useNavigate();
   const handelfileInput = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -53,6 +53,7 @@ export const AudioRecorderComponent = () => {
     }
 
     try {
+      console.log(formData);
       await client.post("/appointment", formData1, {
         headers: {
           "Content-Type": "multipart/form-data",

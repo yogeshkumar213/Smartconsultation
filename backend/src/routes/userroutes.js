@@ -1,9 +1,9 @@
-import { Router } from "express";
+
 import express from "express";
 import multer from "multer";
 const upload = multer({ dest: 'uploads/' })
 // import { jwtDecode } from "jwt-decode";
-import status from "http-status";
+// import status from "http-status";
 
 import { usersignup, doctersignup, userLogin, docterLogin, isAuthenticated } from "../controllers/mongoManeger.js"
 import { getDocterList, getappointDate, appointment,getuserprofile ,updateuserdata,patdel} from "../controllers/userdashreq.js";

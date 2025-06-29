@@ -11,14 +11,14 @@ body {
   line-height: 1.6;
   min-height: 100vh;
 }
-.card .all3card{
+.card .all3card {
   margin-right: 1rem;
 }
 .header {
   display: flex;
   position: sticky;
   top: 0;
- /* position: fixed; */
+  /* position: fixed; */
   justify-content: space-between;
   background-color: white;
   /* min-width: 100vw; */
@@ -27,7 +27,6 @@ body {
   z-index: 999;
   /* margin:0 2rem; */
 }
-
 
 .picture-with-name {
   cursor: pointer;
@@ -70,21 +69,19 @@ body {
 
 .dropdown-menu i {
   padding: 0.8rem;
- 
 }
 .dropdown-menu > div:not(:first-child):hover {
   border: 1px solid #f5f1f1;
   border-radius: 1rem;
   background-color: #f5f1f1;
 }
-.dropdown-menu > div:not(:first-child){
+.dropdown-menu > div:not(:first-child) {
   /* display: grid; */
 }
-.dropdown-menu .dropdown-option{
+.dropdown-menu .dropdown-option {
   display: flex;
   justify-content: center;
   align-items: center;
-
 }
 
 .hospitalname {
@@ -100,22 +97,29 @@ body {
   /* box-shadow: 2rem 4rem 4rem rgba(0, 0, 0, 0.2); */
 }
 
-
 .card div {
   height: 7.7rem;
   width: 28rem;
   padding: 1rem 1.5rem;
-  border: 1px solid rgb(169, 162, 162,0.3);
+  border: 1px solid rgb(169, 162, 162, 0.3);
   border-radius: 1rem;
   /* box-shadow:1px 2px 2rem  rgb(164, 159, 159) ; */
   justify-content: space-between;
 }
 
-.searchBarr{
-  padding: 0.8rem;
-   border: 1px solid rgb(169, 162, 162,0.3);
-    /* width: 100vw; */
-    border-radius:1rem;
-    display: flex;
-    align-items: center;
+.searchBarr {
+  padding: 0.4rem;
+  border: 1px solid rgb(169, 162, 162, 0.3);
+  /* width: 100vw; */
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+}
+ /* for search   */
+/* This will override the autofill background in Chrome/Edge */
+.MuiInputBase-input:-webkit-autofill {
+  box-shadow: 0 0 0 1000px white inset !important; /* Use your background color */
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  -webkit-text-fill-color: #000 !important;
+  caret-color: black !important;
 }

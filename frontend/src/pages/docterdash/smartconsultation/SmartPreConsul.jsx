@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import Slider from "@mui/material/Slider";
 import MuiInput from "@mui/material/Input";
 import VolumeUp from "@mui/icons-material/VolumeUp";
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 
 const Input = styled(MuiInput)`
   width: 42px;
@@ -13,6 +14,7 @@ const Input = styled(MuiInput)`
 
 export default function InputSlider() {
   const [value, setValue] = React.useState(30);
+  const [stopAudio, setStopAudio] = React.useState(false);
 
   const handleSliderChange = (event, newValue) => {
     setValue(newValue);
@@ -29,17 +31,18 @@ export default function InputSlider() {
       setValue(100);
     }
   };
+  const handlePlaybtn = () => {
+    setStopAudio(!stopAudio);
+  };
 
   return (
-    <Box sx={{ }} className="playbutton-and-volume">
-      <div className="playbutton">
-        <i className="fa-solid fa-play"></i>
+    <Box className="playbutton-and-volume">
+      <div className="playbutton" onClick={handlePlaybtn}>
+      {stopAudio===true? <i class="fa-solid fa-pause"></i>:<i className="fa-solid fa-play"></i>}  
       </div>
 
       <div style={{ paddingLeft: "1rem" }}>
-        <div id="input-slider">
-          Volume
-        </div>
+        <div id="input-slider">Volume</div>
 
         <Grid
           container
@@ -51,8 +54,8 @@ export default function InputSlider() {
             justifyContent: "center",
           }}
         >
-          <Grid>
-            <VolumeUp />
+          <Grid onClick={handlePlaybtn}>
+            {stopAudio ?<VolumeUp />:<VolumeOffIcon/>}
           </Grid>
           <Grid size="grow">
             <Slider

@@ -12,7 +12,7 @@ import axios from "axios";
 // import DocterDash from "../pages/DocterDash";
 
 const client = axios.create({
-  baseURL: "http://localhost:8080/api/v1",
+  baseURL: "http://localhost:5050/api/v1",
 });
 const decodeJWT = jwtDecode;
 
@@ -64,9 +64,8 @@ export const AuthProvider = ({ children }) => {
       if (err.response && err.response.status == 499) {
         console.log(err);
         return "user already exist";
-      } else {
-        // return "some other issue", err;
-        return { error: true, message: "Some other issue", details: err };
+      } else {        // return "some other issue", err;
+        return {  message: "Some other issue", details: err };
       }
     }
   };
@@ -94,6 +93,7 @@ export const AuthProvider = ({ children }) => {
         return request.data.message;
       } 
     } catch (err) {
+      console.log(err);
       return err.response.data.message;
       // if (err.response && err.response.status == 401) {
       //   console.log(err);
@@ -164,8 +164,9 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       // debugger;
-      console.log(err.message);
-      return err.message;
+      console.log(err);
+     
+      return err.response.data.message;
     }
   };
 

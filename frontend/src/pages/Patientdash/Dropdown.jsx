@@ -30,12 +30,14 @@ export const Dropdown = ({ visible }) => {
       } catch (err) {
         console.log(err);
       }
-    } else if (opt == "Logout") {
+    } else {
+      console.log(opt);
       const token = localStorage.removeItem("token");
       navigate("/auth/signin");
-    } else {
-      console.log("option not matched");
     }
+    // } else {
+    //   console.log("option not matched");
+    // }
   };
   const handleZone = (opt) => {
     console.log("option is :", opt);
@@ -53,18 +55,15 @@ export const Dropdown = ({ visible }) => {
     }
   }, [zoneTriggered]);
 
-
-
   useEffect(() => {
-  if (!visible) {
-    // Delay the reset to the next tick, so any immediate reopen won’t be wiped out
-    // const timer = setTimeout(() => {
+    if (!visible) {
+      // Delay the reset to the next tick, so any immediate reopen won’t be wiped out
+      // const timer = setTimeout(() => {
       setZoneTriggered(false);
-  //   }, 50);
-  //   return () => clearTimeout(timer);
-  }
-},[visible]);
-
+      //   }, 50);
+      //   return () => clearTimeout(timer);
+    }
+  }, [visible]);
 
   //  maindoubt--------->
   //  if (!visible) return null;

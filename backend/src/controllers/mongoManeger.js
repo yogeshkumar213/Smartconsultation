@@ -9,12 +9,19 @@ import dotenv from "dotenv";
 dotenv.config();
 
 
-main().catch(err => console.log(err));
+main();
 
 async function main() {
-    await mongoose.connect(process.env.MONGO_URL)
-        .then(() => console.log("connected to mongodb"))
-        .catch((err) => console.log(err));
+    try {
+        await mongoose.connect(process.env.MONGO_URL);
+        console.log("connected to mongodb");
+    }
+
+    catch (err) {
+        console.log(err)
+    }
+
+
 
     // use `await mongoose.connect('mongodb://user:password@127.0.0.1:27017/test');` if your database has auth enabled
 
@@ -54,6 +61,7 @@ const isAuthenticated = ((req, res, next) => {
 
 })
 let usersignup = async (req, res) => {
+    console.log("user signup")
     try {
         let { UserName, Password, Email, Phoneno } = req.body;
         console.log(UserName);
@@ -160,14 +168,19 @@ let doctersignup = async (req, res) => {
 
         const token = jwt.sign({
             DocterName: DocterName,
-            Password: Password,
+            DocterId: data._id,
             Email: Email,
             Specilization: Specilization,
             Licenseno: Licenseno
         }, process.env.SECRET_KEY, { expiresIn: "24h" });
         console.log(token);
 
-        return res.status(201).json({ message: "docter registered successfully", token, data })
+        return res.status(201).json({
+            message: "docter registered successfully", token, data: {
+                docterName: data.DocterName,
+                Licenseno: data.Licenseno
+            }
+        })
     }
     catch (err) {
         console.log(err)
@@ -182,6 +195,7 @@ const docterLogin = async (req, res) => {
 
         const { Password, Email, Licenseno } = req.body;
         console.log("Password from request:", Password);
+
         console.log(Email);
 
         const existDocter = await Docter.findOne({
@@ -201,18 +215,21 @@ const docterLogin = async (req, res) => {
 
         const token = jwt.sign(
             {
+                DocterName: existDocter.DocterName,
+                DocterId: existDocter._id,
                 Email: existDocter.Email,
-                Specilization:existDocter.Specilization,
-              
+                Specilization: existDocter.Specilization,
+                Licenseno: existDocter.Licenseno
+
             },
             process.env.SECRET_KEY,
-            { expiresIn: "1h" }
+            { expiresIn: "24h" },
         );
         console.log("sending response to frontend")
         return res.status(200).json({
             message: "Doctor successfully logged in",
-            existDocter,
-            doctoken:token
+            // existDocter,
+            doctoken: token
         });
 
     } catch (err) {

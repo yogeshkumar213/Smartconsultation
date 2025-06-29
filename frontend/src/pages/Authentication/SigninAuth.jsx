@@ -66,9 +66,7 @@ export default function Authentication() {
         console.log("email",Email);
         console.log("password",Password)
         const Authdocterreq = await docterLogin(Email, Password, Licenseno);
-      
         console.log(Authdocterreq);
-
         showSnakbar(Authdocterreq);
       }
     } catch (err) {

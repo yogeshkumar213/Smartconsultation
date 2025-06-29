@@ -20,7 +20,7 @@ async function main() {
 }
 const patdel = async (req, res) => {
     const token = req.headers.authorization;
-    const newToken=token.split(" ")[1];
+    const newToken = token.split(" ")[1];
     if (!newToken) {
         return res.status(401).json({ message: "Authorization token missing" });
     }
@@ -101,6 +101,7 @@ const getuserprofile = async (req, res) => {
 }
 const appointment = async (req, res) => {
     console.log("take appointment");
+    console.log("reqbody is ", req.body);
     try {
         const file = req.files;
         const patientFile = file.PatientFile;
@@ -108,7 +109,7 @@ const appointment = async (req, res) => {
         console.log(patientFile)
         console.log(audioFile);
         const { Patient, Docter, Date, Time } = req.body;
-
+        console.log("Patient id is", Patient);
 
         const patientAppointData = await Appointment.create({
             Patient: Patient,
@@ -151,7 +152,7 @@ const getDocterList = async (req, res) => {
     console.log("for doctelist req is came")
     try {
         const docterList = await Docter.find({}).select("-Password -__v -Email -Licenseno");
-        console.log(docterList);
+        // console.log(docterList);
         res.status(200).json({ message: "docter list found", docterList: docterList })
     }
     catch (err) {

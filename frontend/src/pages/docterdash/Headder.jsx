@@ -11,7 +11,7 @@ import { jwtDecode } from "jwt-decode";
 import "./Headder.css";
 import { useEffect } from "react";
 
-export default function DocterHeadder() {
+export const DocterHeadder = () => {
   const [border, setborder] = useState(false);
   const [docter, setDocter] = useState({});
 
@@ -82,4 +82,4 @@ export default function DocterHeadder() {
       <hr style={{ margin: "0.5rem", opacity: "0.3" }}></hr>
     </>
   );
-}
+};
