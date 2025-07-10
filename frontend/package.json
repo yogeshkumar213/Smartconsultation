@@ -22,8 +22,9 @@
     "react-audio-voice-recorder": "^2.2.0",
     "react-dom": "^19.0.0",
     "react-h5-audio-player": "^3.10.0-rc.1",
-    "react-mic": "^12.4.6",
-    "react-router-dom": "^7.4.1"
+    "react-media-recorder": "^1.7.1",
+    "react-router-dom": "^7.4.1",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

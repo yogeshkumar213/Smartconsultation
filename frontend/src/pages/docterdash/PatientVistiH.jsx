@@ -20,12 +20,17 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-export const PatientVistiH = ({ patientLastVisit, setPatientLastVisit }) => {
+export const PatientVistiH = ({
+  patientLastVisit,
+  setPatientLastVisit,
+  currpatienthistory,
+}) => {
   const [open, setOpen] = React.useState(false);
 
   const [docMessage, setDocMessage] = useState("hello"); // crate context api
 
   const [activeTab, setActiveTab] = useState("Note");
+  const [report, setReport] = useState(null);
   const tabs = ["Note", "History", "Report"];
   const [reportData, setReportData] = useState([
     "Diagnosed with asthma in 2015; has experienced intermittent symptoms since then, typically triggered by physical exertion or environmental factors such as dust and cold air. Uses prescribed inhalers as needed.",
@@ -35,9 +40,23 @@ export const PatientVistiH = ({ patientLastVisit, setPatientLastVisit }) => {
   const handleTabChange = (key) => {
     console.log(key);
     setActiveTab(key);
-  };
-  //   };
+    if (key === "Report") {
+      const bufferData = currpatienthistory?.PatientFile?.data;
+      console.log(bufferData)
 
+      if (bufferData) {
+        const stringData = new TextDecoder("utf-8").decode(
+          new Uint8Array(bufferData)
+        );
+        console.log(stringData);
+        setReport(stringData);
+      }
+    }
+  };
+
+
+  //   };
+  console.log(currpatienthistory);
   const handleClose = () => {
     setPatientLastVisit(false);
   };
@@ -147,8 +166,17 @@ export const PatientVistiH = ({ patientLastVisit, setPatientLastVisit }) => {
 
               <p>Past Visits</p>
             </div>
-          ) : activeTab === "Report" ? (
-            <div>report</div>
+          ) : activeTab === "Report" && report != null ? (
+            // <div>report</div>
+            <textarea
+              rows={8}
+              cols={15}
+              style={{ backgroundColor: "white" }}
+              value={report}
+              readOnly
+            >
+              {}
+            </textarea>
           ) : null}
         </DialogContent>
         <DialogActions>

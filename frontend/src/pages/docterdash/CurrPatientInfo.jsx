@@ -4,10 +4,58 @@ import Button from "@mui/material/Button";
 import { DocNote } from "./DocNote";
 import { useState } from "react";
 import { PatientVistiH } from "./PatientVistiH";
+import { PatientCollectionContext } from "../../context/DocterAuthContext";
+import { useContext } from "react";
+import { useEffect } from "react";
+import { docterContext } from "../../context/DocterAuthContext";
 
 export default function CurrentPatient() {
   const [notes, setNotes] = useState(false);
   const [patientLastVisit, setPatientLastVisit] = useState(false);
+  const [currno, setCurrNo] = useState(0);
+  const { docterAPI } = useContext(docterContext);
+  const [currPatient, setcurrPatient] = useState([]);
+  const [singlepatient, setSinglePatient] = useState();
+  const [currpatienthistory, setCurrPatientHistory] = useState(null);
+  const { patientcollection, setPatientCollection } = useContext(
+    PatientCollectionContext
+  );
+
+  console.log(patientcollection);
+
+  const nextPatient = () => {
+    console.log("patientClicked");
+
+    setCurrNo((cur) => cur + 1);
+  };
+  useEffect(() => {
+    // setcurrPatient();
+    if (!patientcollection) return;
+    const fetchPatientData = async () => {
+      // console.log("currPatient", currPat);
+      try {
+        const res = await docterAPI.post("/getpatientdet", patientcollection);
+        console.log(res.data);
+        setcurrPatient(res.data.newArray);
+      } catch (err) {
+        console.error("Error fetching patient details", err);
+      }
+    };
+    fetchPatientData();
+  }, [patientcollection]);
+
+  useEffect(() => {
+    if (currPatient.length > 0) {
+      console.log(currPatient.length);
+      if (currno < currPatient.length) {
+        setSinglePatient(currPatient[currno]);
+        setCurrPatientHistory(patientcollection[currno]);
+      } else {
+        setSinglePatient("Today Appointment completed");
+        setCurrPatientHistory(null);
+      }
+    }
+  }, [currno, currPatient]);
 
   const noteHandler = (e) => {
     e.preventDefault();
@@ -19,7 +67,14 @@ export default function CurrentPatient() {
 
   return (
     <div className="patient-Info">
-      {patientLastVisit && <PatientVistiH patientLastVisit={patientLastVisit} setPatientLastVisit={setPatientLastVisit}/>}
+      {typeof currpatienthistory}
+      {patientLastVisit && currpatienthistory && (
+        <PatientVistiH
+          patientLastVisit={patientLastVisit}
+          setPatientLastVisit={setPatientLastVisit}
+          currpatienthistory={currpatienthistory}
+        />
+      )}
       {notes && <DocNote notes={notes} setNotes={setNotes} />}
       <div
         style={{
@@ -44,7 +99,11 @@ export default function CurrentPatient() {
         </div>
 
         <div>
-          <h3>Patient Name</h3>
+          <h3>
+            {typeof singlepatient === "string"
+              ? singlepatient
+              : singlepatient?.UserName ?? "Loading ..."}
+          </h3>
           <div
             style={{ display: "flex", fontSize: "0.8rem" }}
             className="age-gender"
@@ -58,6 +117,7 @@ export default function CurrentPatient() {
         variant="contained"
         disableElevation
         fullWidth
+        onClick={nextPatient}
         style={{ marginTop: "2rem" }}
       >
         Mark as Consulted

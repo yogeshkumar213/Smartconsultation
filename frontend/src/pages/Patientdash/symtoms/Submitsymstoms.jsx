@@ -1,40 +1,51 @@
-import React, { useEffect } from "react";
-import { ReactMic } from "react-mic";
-import { useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useReactMediaRecorder } from "react-media-recorder";
 import { useNavigate } from "react-router-dom";
 import "../Patientdash.css";
 import { useFormData } from "../../../context/PatientFormContext";
 import { Button } from "@mui/material";
-import axios from "axios";
-// import { useRef } from "react";
 import { useSnackbar } from "../../../context/Snakbarr";
 import { useAuth } from "../../../context/AuthContext";
+
 export const AudioRecorderComponent = () => {
-  const [record, setRecord] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [check, setCheck] = useState(false);
-  const [patientfile, setPatientFile] = useState(null);
-  const { formData, setFormData, appointmentController } = useFormData();
-  const [patientaudio1, setPatientAudio1] = useState({});
-  const [audioUrl, setAudioUrl] = useState(null);
-  const microphoneIcon = useRef();
   const fileInput = useRef(null);
+
+  const {
+    formData,
+    setFormData,
+    appointmentController,
+    setAppointmentController,
+  } = useFormData();
   const { showSnakbar } = useSnackbar();
   const { client } = useAuth();
   const navigate = useNavigate();
-  const handelfileInput = (e) => {
+
+  const { status, startRecording, stopRecording, mediaBlobUrl } =
+    useReactMediaRecorder({
+      audio: true,
+      onStop: (blobUrl, blob) => {
+        console.log("Recorded blob: ", blob);
+        setFormData((prev) => ({
+          ...prev,
+          PatientAudio: blob,
+        }));
+      },
+    });
+
+  // handle file input
+  const handleFileInput = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setPatientFile(file);
-      setFormData((prev) => {
-        return {
-          ...prev,
-          SymptomFile: file,
-        };
-      });
+      setFormData((prev) => ({
+        ...prev,
+        SymptomFile: file,
+      }));
     }
-    console.log(file);
   };
-  const handleClickBtn = () => {
+
+  const handleFileButtonClick = () => {
     fileInput.current.click();
   };
 
@@ -46,104 +57,73 @@ export const AudioRecorderComponent = () => {
     formData1.append("Time", formData.Time);
     if (formData.SymptomFile) {
       formData1.append("PatientFile", formData.SymptomFile);
-     
     }
     if (formData.PatientAudio) {
       formData1.append("PatientAudio", formData.PatientAudio);
     }
 
     try {
-      console.log(formData);
-      await client.post("/appointment", formData1, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      console.log("appointment progress");
+      const result = await client.post("/appointment", formData1, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
+      console.log(result);
       showSnakbar("Appointment submitted successfully");
+      // console.log("appointment booked");
+      setFormData((prev) => ({
+        ...prev,
+        Docter: "",
+        // Patient:"",
+        Date: null,
+        Time: "",
+        PatientAudio: null,
+        SymptomFile: null,
+      }));
+      setAppointmentController(false);
+      // console.log("reset");
     } catch (err) {
-      if (err.response.data.message == "invalid or expired token") {
+      if (err.response?.data?.message === "invalid or expired token") {
         navigate("/signin");
         showSnakbar("invalid or expired token");
       } else {
-        console.log(err);
+        console.error(err);
         showSnakbar("Something went wrong");
       }
     }
   };
 
+  // auto-submit if controller triggers
   useEffect(() => {
     if (appointmentController) {
+      // const handleSubmit = async () => {
       submitAppointment();
+      // };
+      // handleSubmit();
     }
   }, [appointmentController]);
 
-  const onStop = async (recordedBlob) => {
-    console.log("Recorded audio:", recordedBlob);
-
-    const audioUrlpatient = URL.createObjectURL(recordedBlob.blob);
-    setAudioUrl(audioUrlpatient);
-    setCheck(false);
-    setRecord(false);
-    // setPatientAudio1();
-    setFormData((prev) => {
-      return {
-        ...prev,
-        PatientAudio: recordedBlob.blob,
-      };
-    });
-  };
-  // const formData1 = new FormData();
-  // formData1.append("Patient", formData.Patient);
-  // formData1.append("Docter", formData.Docter);
-  // formData1.append("Date", formData.Date);
-  // formData1.append("Time", formData.Time);
-
-  // formData1.append("SymptomsFile", formData.SymptomFile);
-
-  // formData1.append("PatientAudio", formData.PatientAudio);
-  //   {appointmentController}
-  //   if (appointmentController == true) {
-  //     console.log("true");
-  //     try {
-  //       const response = await client.post(
-  //         "http://localhost:8080/appointment",
-  //         formData1,
-  //         {
-  //           headers: {
-  //             "Content-Type": "multipart/form-data",
-  //           },
-  //         }
-  //       );
-  //     } catch (err) {
-  //       console.log(err);
-  //     }
-  //   }
-  // };
-  const onData = (recordedBlob) => {
-    console.log("chunk of real-time data is: ", recordedBlob);
-  };
-  const handleClick = () => {
-    if (record) {
-      setRecord(false);
-      setCheck(false);
-    } else {
-      setRecord(true);
-      setCheck(true);
-      setAudioUrl(null);
-    }
-
-    // setIsRecording(true);
-  };
   useEffect(() => {
-    if (record) {
+    if (isRecording) {
       const timer = setTimeout(() => {
-        setRecord(false);
-        // setIsRecording(false);
-        setCheck(false);
+        setIsRecording(false);
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [record]);
+  }, [isRecording]);
+
+  // recording toggle
+  const handleRecordClick = () => {
+    if (!isRecording) {
+      startRecording();
+      setIsRecording(true);
+      setCheck(true);
+    } else {
+      stopRecording();
+      setIsRecording(false);
+      setCheck(false);
+    }
+  };
+
   return (
     <div className="symtomsSub">
       <h2>Submit your Symptoms</h2>
@@ -166,77 +146,40 @@ export const AudioRecorderComponent = () => {
           alignItems: "center",
           cursor: "pointer",
         }}
+        onClick={handleRecordClick}
       >
         <i
           className="fa-solid fa-microphone"
-          // record={record}
-          ref={microphoneIcon}
-          onClick={handleClick}
           style={{
-            fontSize: "2rem",
-            color: "#4caf50",
-            ...(check ? { fontSize: "4rem", color: "red" } : {}),
-            // ... (isRecording?{color:"red"}:{})
+            fontSize: check ? "4rem" : "2rem",
+            color: check ? "red" : "#4caf50",
           }}
         ></i>
       </div>
-      {/* {record && ( */}
-      <ReactMic
-        record={record}
-        className="sound-wave"
-        onStop={onStop} // Handle stop event
-        onData={onData} // Handle real-time data
-        strokeColor="#000000"
-        backgroundColor="#1976d2"
-        // style={{
-        //   width: "100%", // Add width
-        //   height: "7rem", // Add height
-        //   marginTop: "1rem",
-        // }}
-      />
-      {/* ) */}
-      {/* } */}
-      {audioUrl && (
-        <audio controls>
-          <source src={audioUrl} type="audio/webm" />
-          Your browser does not support the audio element.
-        </audio>
-      )}
-      <div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
-          <input
-            type="file"
-            style={{ display: "none" }}
-            onChange={handelfileInput}
-            ref={fileInput}
-          ></input>
-          <Button
-            style={{
-              boxSizing: "border-box",
-              display: "block",
 
-              width: "100%",
-              // display: "flex",
-              // alignItems: "center",
-              // justifyContent: "center",
-              marginTop: "1rem",
-            }}
-            onClick={handleClickBtn}
-            variant="contained"
-          >
-            <i className="fa-solid fa-arrow-up-from-bracket"></i>&nbsp;&nbsp;
-            Submit your symtoms
-          </Button>
-        </div>
+      <div style={{ marginTop: "1rem" }}>
+        <p>{status}</p>
+        {formData.PatientAudio && (
+          <audio src={mediaBlobUrl} controls style={{ marginTop: "1rem" }} />
+        )}
+      </div>
+
+      <div style={{ marginTop: "1rem" }}>
+        <input
+          type="file"
+          style={{ display: "none" }}
+          ref={fileInput}
+          onChange={handleFileInput}
+        />
+        <Button
+          onClick={handleFileButtonClick}
+          variant="contained"
+          style={{ width: "100%", marginTop: "1rem" }}
+        >
+          <i className="fa-solid fa-arrow-up-from-bracket"></i>&nbsp; Submit
+          your symptoms
+        </Button>
       </div>
     </div>
   );
-  // };
 };

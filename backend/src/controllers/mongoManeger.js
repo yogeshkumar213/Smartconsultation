@@ -1,9 +1,11 @@
 import { Docter } from "../models/docter.js";
 import { User } from '../models/user.js';
+import { Appointment } from "../models/appointment.js";
 import mongoose from 'mongoose';
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import status from "http-status"
+
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -28,7 +30,11 @@ async function main() {
 }
 
 
-
+// async function appoint() {
+//     const deletedAppoint = await Appointment.deleteMany({});
+//     console.log(deletedAppoint);
+// }
+// appoint();
 
 const isAuthenticated = ((req, res, next) => {
     try {
@@ -59,7 +65,25 @@ const isAuthenticated = ((req, res, next) => {
     }
 
 
-})
+});
+const verifyDocter = (req, res, next) => {
+    const token = req.headers.doctoken;
+    if (!token) {
+        return res.status(400).json({ message: "token not found" })
+    }
+    try {
+
+        const decode = jwt.verify(token, process.env.SECRET_KEY);
+        console.log(decode);
+        console.log("vrify docter", decode);
+        req.docterId = decode.DocterId;
+        next();
+    }
+    catch (err) {
+        return res.status(400).json({ message: "token unathorized" })
+    }
+
+}
 let usersignup = async (req, res) => {
     console.log("user signup")
     try {
@@ -238,6 +262,6 @@ const docterLogin = async (req, res) => {
     }
 };
 
-export { userLogin, doctersignup, usersignup, docterLogin, isAuthenticated };
+export { userLogin, doctersignup, usersignup, docterLogin, isAuthenticated, verifyDocter };
 
 

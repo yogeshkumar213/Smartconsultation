@@ -8,6 +8,7 @@ import Button from "@mui/material/Button";
 import SelectTime from "./Appointment/SelectTime";
 import { useFormData } from "../../context/PatientFormContext";
 import { useSnackbar } from "../../context/Snakbarr";
+import dayjs from "dayjs";
 
 export default function BasicDateCalendar() {
   const [appointDate, setAppointDate] = useState("");
@@ -18,6 +19,7 @@ export default function BasicDateCalendar() {
     setAppointmentController,
   } = useFormData();
   const { showSnakbar } = useSnackbar();
+
   const appointmenthandler = () => {
     console.log(formData);
     // try {
@@ -31,7 +33,7 @@ export default function BasicDateCalendar() {
       console.log("all value are set");
 
       setAppointmentController(true);
-      showSnakbar("Appointment Booked");
+      // showSnakbar("Appointment Booked");
     } else {
       console.log("All fields are required");
       showSnakbar("all fields are required");
@@ -44,18 +46,19 @@ export default function BasicDateCalendar() {
   };
   const handleDateChange = (value) => {
     console.log(value);
-    const date = value.$d;
-    const newDate = date.toDateString();
+    // const date = value.$d;
+    // const newDate = date.toDateString();
+    const newDate = value.format("YYYY-MM-DD");
     console.log(newDate);
     setAppointDate(newDate);
     setFormData((prev) => {
       return {
         ...prev,
-        Date: newDate,
+        Date: value,
       };
     });
   };
-
+  // console.log(formData.Date);
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <div className="calender">
@@ -74,9 +77,8 @@ export default function BasicDateCalendar() {
             margin: "1rem",
           }}
         >
-          <DateCalendar onChange={handleDateChange} />
-          {appointDate && <SelectTime />}
-
+          <DateCalendar value={formData.Date} onChange={handleDateChange} />
+          {formData.Date && <SelectTime />}
           <Button
             variant="contained"
             style={{ width: "100%" }}

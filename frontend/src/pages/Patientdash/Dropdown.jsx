@@ -32,7 +32,8 @@ export const Dropdown = ({ visible }) => {
       }
     } else {
       console.log(opt);
-      const token = localStorage.removeItem("token");
+     const token= ["token","patientid"].forEach(item=>localStorage.removeItem(item));
+      // const token = ("token","patientid");
       navigate("/auth/signin");
     }
     // } else {

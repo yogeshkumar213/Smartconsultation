@@ -1,4 +1,4 @@
-import React, { Children, useEffect, useRef, useState} from "react";
+import React, { Children, useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import "./Patientdash.css";
 import Button from "@mui/material/Button";
@@ -13,7 +13,7 @@ import { useFormData } from "../../context/PatientFormContext.jsx";
 const label = { inputProps: { "aria-label": "Checkbox demo" } };
 
 export const Card = () => {
-  const navigate=useNavigate();
+  const navigate = useNavigate();
   const { Department } = useDepartment();
   const [docterList, setDocterList] = useState([]);
   const { DocterName, setDocterName } = useSearchContext();
@@ -21,17 +21,16 @@ export const Card = () => {
   const [docterId, setDocterId] = useState("");
   const [docterSelectIcon, setDocterSelectIcon] = useState("");
   const tickIcon = useRef(null);
-  const {formData,setFormData}=useFormData();
-  const {showSnakbar}=useSnackbar();
+  const { formData, setFormData } = useFormData();
+  const { showSnakbar } = useSnackbar();
 
   const client = axios.create({
     baseURL: "http://localhost:5050/api/v1",
   });
 
-
   client.interceptors.request.use((config) => {
     const token = localStorage.getItem("token");
-  
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -39,17 +38,21 @@ export const Card = () => {
   });
 
   useEffect(() => {
-    client.get("/hospital/getDocterlist")
+    client
+      .get("/hospital/getDocterlist")
       .then((res) => {
         console.log(res.data.docterList);
         setDocterList(res.data.docterList);
         setAllDoctors(res.data.docterList);
       })
       .catch((err) => {
-        if(err.response.data.message=="Access token is not found" || "invalid or expired token"){
-        navigate("/auth/signin");
-        showSnakbar(err.response.data.message);
-        console.log(err.response.data);
+        if (
+          err.response.data.message == "Access token is not found" ||
+          "invalid or expired token"
+        ) {
+          navigate("/auth/signin");
+          showSnakbar(err.response.data.message);
+          console.log(err.response.data);
         }
         console.log(err);
       });
@@ -92,16 +95,17 @@ export const Card = () => {
       setDocterList(filtered);
     }
   }, [Department, allDoctors]);
+  
   const docterSelection = (id) => {
-   
     setDocterId(id);
     setDocterSelectIcon(id);
     console.log(id);
-    setFormData ((prev)=>{
+    setFormData((prev) => {
       return {
-        ...prev,Docter:id,
-      }
-    })
+        ...prev,
+        Docter: id,
+      };
+    });
   };
   const handlecheckBox = (e) => {
     e.preventDefault();
@@ -145,13 +149,13 @@ export const Card = () => {
                   ref={tickIcon}
                   style={{ backgroundColor: "black" }}
                 >
-                  {docterSelectIcon == item._id ? (
+                  {formData.Docter== item._id ? (
                     <Checkbox
+                    value={formData.Docter}
                       onClick={handlecheckBox}
-                      {...label}
+                      // {...label}
                       defaultChecked
-                      sx={{ "&.MuiButtonBase-root": { padding:0  } }}
-                   
+                      sx={{ "&.MuiButtonBase-root": { padding: 0 } }}
                     />
                   ) : (
                     "SELECT"

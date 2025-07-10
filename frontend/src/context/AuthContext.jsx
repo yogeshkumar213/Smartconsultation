@@ -31,10 +31,13 @@ export const AuthProvider = ({ children }) => {
   const { formData, setFormData } = useFormData();
   // const [patientid, setPatientId] = useState("");
   // const patient = formData.Patient;
+
   useEffect(() => {
     const patid = localStorage.getItem("patientid");
+    console.log(patid);
     if (patid) {
       // setPatientId(patid);
+      console.log(patid);
       setFormData((prev) => {
         return { ...prev, Patient: patid };
       });
@@ -53,19 +56,30 @@ export const AuthProvider = ({ children }) => {
       });
       if (request.status == 201) {
         console.log("user registered successfully");
+        console.log(request.data);
+        // setFormData((prev)=>({...prev,Patient:request.data._id}))
         console.log(request.data.token);
 
-        localStorage.setItem("token", request.data.token);
+        [["token", request.data.token, "patientid", request.data._id]].forEach(
+          ([key, value]) => localStorage.setItem(key, value)
+        );
+        setFormData((prev) => ({
+          ...prev,
+          Patient: request.data._id,
+        }));
+        // localStorage.setItem("token", request.data.token);
         setUser(decodeJWT(request.data.token));
         navigate("/User-dashboard");
+        // localStorage.getItem("patientid");
         return request.data.message;
       }
     } catch (err) {
       if (err.response && err.response.status == 499) {
         console.log(err);
         return "user already exist";
-      } else {        // return "some other issue", err;
-        return {  message: "Some other issue", details: err };
+      } else {
+        // return "some other issue", err;
+        return { message: "Some other issue", details: err };
       }
     }
   };
@@ -78,20 +92,33 @@ export const AuthProvider = ({ children }) => {
       let request = await client.post("/userlogin", {
         Password,
         Email,
-      })
-      console.log(request)
+      });
+      console.log(request);
 
       if (request.status == 200) {
         console.log("user found");
         console.log(request.data.token);
-        localStorage.setItem("patientid", request.data.existUser._id);
+        setFormData((prev) => ({
+          ...prev,
+          Patient: request.data.existUser._id,
+        }));
+        // localStorage.setItem("patientid", request.data.existUser._id);
+
+        [
+          ["token", request.data.token],
+          ["patientid", request.data.existUser._id],
+        ].forEach(([key,value])=>localStorage.setItem(key,value));
+        // setFormData((prev) => ({
+        //   ...prev,
+        //   Patient: request.data._id,
+        // }));
 
         console.log(request);
-        localStorage.setItem("token", request.data.token);
+        // localStorage.setItem("token", request.data.token);
         setUser(decodeJWT(request.data.token));
         navigate("/User-dashboard");
         return request.data.message;
-      } 
+      }
     } catch (err) {
       console.log(err);
       return err.response.data.message;
@@ -141,9 +168,9 @@ export const AuthProvider = ({ children }) => {
 
   const docterLogin = async (Email, Password, Licenseno) => {
     console.log("request go");
-   
+
     console.log(Password);
-     console.log(Email);
+    console.log(Email);
     try {
       let request = await client.post("/docterlogin", {
         Email,
@@ -165,7 +192,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       // debugger;
       console.log(err);
-     
+
       return err.response.data.message;
     }
   };

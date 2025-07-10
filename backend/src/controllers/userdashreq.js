@@ -4,6 +4,8 @@ import { Appointment } from '../models/appointment.js';
 import jwt, { decode } from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import status from "http-status"
+
+import { io } from '../../app.js';
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -99,6 +101,8 @@ const getuserprofile = async (req, res) => {
 
 
 }
+
+
 const appointment = async (req, res) => {
     console.log("take appointment");
     console.log("reqbody is ", req.body);
@@ -106,8 +110,8 @@ const appointment = async (req, res) => {
         const file = req.files;
         const patientFile = file.PatientFile;
         const audioFile = file.PatientAudio;
-        console.log(patientFile)
-        console.log(audioFile);
+        // console.log(patientFile)
+        // console.log(audioFile);
         const { Patient, Docter, Date, Time } = req.body;
         console.log("Patient id is", Patient);
 
@@ -119,13 +123,20 @@ const appointment = async (req, res) => {
             // PatientAudio: audioFile,
             PatientFile: patientFile
         })
+
         console.log(patientAppointData);
+        const totalAppointmenttoday=await Appointment.countDocuments({Docter:Docter});
+        console.log(totalAppointmenttoday);
+        io.emit("totalPatient",totalAppointmenttoday);
+        
+        return res.status(200).json({ message: "patient appointment booked" })
+
     } catch (err) {
         console.log(err);
         res.status(500).json({ message: "something is wrong ", err })
     }
 }
-const getappointDate = async (req, res) => {
+const getappointTime = async (req, res) => {
     try {
         console.log("request for time is came")
         const appointDate = ["09:00 AM",
@@ -163,4 +174,4 @@ const getDocterList = async (req, res) => {
 
 
 
-export { getDocterList, getappointDate, appointment, getuserprofile, updateuserdata, patdel }
+export { getDocterList, getappointTime, appointment, getuserprofile, updateuserdata, patdel }

@@ -11,7 +11,7 @@ export default function SelectTime() {
   const { formData, setFormData } = useFormData();
   useEffect(() => {
     client
-      .get("http://localhost:5050/api/v1/getappointDate")
+      .get("http://localhost:5050/api/v1/getappointtime")
       .then((res) => {
         console.log(res);
         setPrescheduledTime(res.data.message);
@@ -50,6 +50,7 @@ export default function SelectTime() {
             key={item}
             className="item"
             onClick={() => handleTime(item)}
+            value={formData.Time}
             style={{
               display: "flex",
               border: "1px solid black",
