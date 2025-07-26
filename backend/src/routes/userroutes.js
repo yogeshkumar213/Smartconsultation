@@ -7,18 +7,19 @@ import { io } from "../../app.js";
 // import { jwtDecode } from "jwt-decode";
 // import status from "http-status";
 
+
 import { usersignup, doctersignup, userLogin, docterLogin, isAuthenticated } from "../controllers/mongoManeger.js"
 import { getDocterList, getappointTime, appointment, getuserprofile, updateuserdata, patdel } from "../controllers/userdashreq.js";
 import { Appointment } from "../models/appointment.js";
 
-const router = express.Router();
+
 export const userRoutes = (io) => {
-   
+    const router = express.Router();
     router.delete("/pat/permdel", isAuthenticated, patdel);
     router.patch("/updatedata", isAuthenticated, updateuserdata);
     router.post("/appointment", isAuthenticated, upload.fields([
-        { name: 'PatientAudio', maxCount: 1 },
-        { name: 'PatientFile', maxCount: 1 }
+        { name: 'PatientAudio', maxCount: 1 }, 
+        { name: 'PatientFile', maxCount: 4 }
     ]), appointment);
     router.get("/getuserprofile", getuserprofile);
     router.post("/usersignup", usersignup)

@@ -17,14 +17,14 @@ export const Card = () => {
     const fetchAppointments = async () => {
       try {
         const res = await docterAPI.get("/api/appointments");
-        const patientCollectionData = res.data.totalCollection;
+        const patientCollectionData = res.data.Collection;
         setPatientCollection(patientCollectionData);
 
         const totalPatientCount = res.data.totalAppointment;
         setTotalPatient(totalPatientCount);
         console.log(res);
       } catch (err) {
-        console.log(err);
+        console.log(err.data.err);
       }
     };
     fetchAppointments();

@@ -3,11 +3,19 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import "../Patientdash.css";
 import { useFormData } from "../../../context/PatientFormContext";
-
+import FormControl from "@mui/material/FormControl";
+import { AgeGender } from "./AgeGender";
 export default function SelectTime() {
   const [prescheduledtime, setPrescheduledTime] = useState([]);
   const [appointtime, setAppointTime] = useState("");
-  const {client} =useAuth();
+  const { client } = useAuth();
+
+  const [age, setAge] = React.useState("");
+  const [gender,setGender]=useState("");
+
+  const handleGenderChange=()=>{
+
+  }
   const { formData, setFormData } = useFormData();
   useEffect(() => {
     client
@@ -20,6 +28,9 @@ export default function SelectTime() {
         console.log(err);
       });
   }, []);
+  // const handleChange = (event) => {
+  //   setAge(event.target.value);
+  // };
   const handleTime = (item) => {
     setAppointTime(item);
     setFormData((prev) => {
@@ -46,6 +57,7 @@ export default function SelectTime() {
     >
       {prescheduledtime.map((item) => {
         return (
+          // <div>
           <div
             key={item}
             className="item"
@@ -64,8 +76,18 @@ export default function SelectTime() {
           >
             {item}
           </div>
+
+          // </div>
         );
       })}
+      {appointtime && (
+        <div>
+        <AgeGender label="Gender" value={gender} onChange={handleGenderChange} options={[
+          {value:"male" ,label:"Male"},{value:"female",label:"Female"},{value:"other",label:"other"}]} age={age} setAge={setAge} gender={gender} setGender={setGender}/>
+        </div>
+      )}
+
+
     </div>
   );
 }

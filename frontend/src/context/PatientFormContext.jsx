@@ -11,7 +11,7 @@ export const PatientFormProvider = ({ children }) => {
     // kyunki DateCalendar ye expect karta hai ki value me ya to null ho ya dayjs object ho.
     Date: null,
     Time: "",
-    SymptomFile: "",
+    PatientFile: [],
     PatientAudio: "",
   });
 

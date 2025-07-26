@@ -43,9 +43,8 @@ export default function Authentication() {
   const [DocterName, setDocterName] = useState("");
   const { usersignup, doctersignup } = useAuth();
   const [open, setOpen] = React.useState(false);
-  const {showSnakbar}=useSnackbar();
-
-
+  const { showSnakbar } = useSnackbar();
+  const [gender, setGender] = useState("");
 
   const handleClose = (event, reason) => {
     if (reason === "clickaway") return; // Prevent closing on clickaway
@@ -58,7 +57,6 @@ export default function Authentication() {
   const authReq = async (e) => {
     e.preventDefault();
 
- 
     if (FormState == 0) {
       if (!isformvaliduser) {
         alert("all field is required");
@@ -67,12 +65,12 @@ export default function Authentication() {
       console.log("request");
 
       let requestRes = await usersignup(UserName, Password, Phoneno, Email);
-     if(requestRes){
-      showSnakbar(requestRes)
-     }else{
-      showSnakbar ("something is wrong ")
-     }
-      
+      if (requestRes) {
+        showSnakbar(requestRes);
+      } else {
+        showSnakbar("something is wrong ");
+      }
+
       // console.log(requestRes);
 
       // setMessage(requestRes);
@@ -90,7 +88,7 @@ export default function Authentication() {
         Licenseno
       );
       showSnakbar(requestRes);
-     
+
       console.log(requestRes);
     }
   };
@@ -101,7 +99,7 @@ export default function Authentication() {
 
       <Grid container component="main" sx={{ height: "80vh", width: "60vh" }}>
         <CssBaseline />
-       
+
         <Grid component={Paper} elevation={6} square>
           <Box
             sx={{
@@ -193,6 +191,7 @@ export default function Authentication() {
                 autoFocus
               />
               {FormState === 0 ? (
+                // <div>
                 <TextField
                   margin="normal"
                   required
@@ -224,7 +223,9 @@ export default function Authentication() {
                   autoFocus
                 /> */}
 
-                  <FormControl sx={{ m: 1,minWidth:"60%",justifyContent:"center"}}>
+                  <FormControl
+                    sx={{ m: 1, minWidth: "60%", justifyContent: "center" }}
+                  >
                     <InputLabel id="demo-simple-select-autowidth-label">
                       Specilization
                     </InputLabel>
@@ -236,13 +237,12 @@ export default function Authentication() {
                       autoWidth
                       label="Specilization"
                       sx={{
-                        '& .MuiOutlinedInput-input':{
+                        "& .MuiOutlinedInput-input": {
                           // border:"1px solid blue",
-                          padding :"1rem",
+                          padding: "1rem",
                           // borderRadius:"1rem"
-            
                         },
-                       // adds space between text and dropdown icon
+                        // adds space between text and dropdown icon
                       }}
                     >
                       <MenuItem value="">

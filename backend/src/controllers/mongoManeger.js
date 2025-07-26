@@ -6,8 +6,8 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import status from "http-status"
 
-
 import dotenv from "dotenv";
+import { get } from "http";
 dotenv.config();
 
 
@@ -67,6 +67,7 @@ const isAuthenticated = ((req, res, next) => {
 
 });
 const verifyDocter = (req, res, next) => {
+    console.log("verifyDocter middleware called");
     const token = req.headers.doctoken;
     if (!token) {
         return res.status(400).json({ message: "token not found" })
@@ -80,10 +81,22 @@ const verifyDocter = (req, res, next) => {
         next();
     }
     catch (err) {
-        return res.status(400).json({ message: "token unathorized" })
+        return res.status(400).json({ message: "token unathorized", err })
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
 let usersignup = async (req, res) => {
     console.log("user signup")
     try {

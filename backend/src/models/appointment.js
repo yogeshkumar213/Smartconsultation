@@ -18,10 +18,12 @@ const appointmentSchema = new mongoose.Schema({
         default: Date.now,
     },
     PatientAudio: {
-        type: String
+        type: String,
+       
     },
     PatientFile: {
-        type: Buffer
+        type: [String],
+         default:[]
     }
 });
 const Appointment = mongoose.model('Appointment', appointmentSchema);

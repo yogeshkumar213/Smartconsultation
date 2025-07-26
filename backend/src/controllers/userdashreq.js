@@ -1,25 +1,46 @@
-import { User } from '../models/user.js';
 import { Docter } from "../models/docter.js";
+import { User } from '../models/user.js';
+
+import fs from 'fs';
+import jwt from 'jsonwebtoken';
+import mime from "mime-types";
+import path from 'path';
+import { uuid } from 'uuidv4';
+import { fileURLToPath } from 'url';
 import { Appointment } from '../models/appointment.js';
-import jwt, { decode } from 'jsonwebtoken';
-import mongoose from 'mongoose';
-import status from "http-status"
 
-import { io } from '../../app.js';
+// 👇 Simulate __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 
-main().catch(err => console.log(err));
+console.log("key", process.env.AWS_ACCESS_KEY_ID);
+console.log(process.env.SECRET_KEY)
+// console.log("hello")
+// console.clear();
+// main().catch(err => console.log(err));
 
-async function main() {
-    await mongoose.connect(process.env.MONGO_URL)
-        .then(() => console.log("connected to mongodb"))
-        .catch((err) => console.log(err));
+// async function main() {
+//     await mongoose.connect(process.env.MONGO_URL)
+//         .then(() => console.log("connected to mongodb"))
+//         .catch((err) => console.log(err));
 
-    // use `await mongoose.connect('mongodb://user:password@127.0.0.1:27017/test');` if your database has auth enabled
+//     // use `await mongoose.connect('mongodb://user:password@127.0.0.1:27017/test');` if your database has auth enabled
 
-}
+// }
+
+
+
+
+
+
+
+
 const patdel = async (req, res) => {
     const token = req.headers.authorization;
     const newToken = token.split(" ")[1];
@@ -104,38 +125,212 @@ const getuserprofile = async (req, res) => {
 
 
 const appointment = async (req, res) => {
+    // const patientToken=req.headers.authorization.split(" ")[1];
+
+    // console.log("headers",);
+    const { io } = await import('../../app.js');
     console.log("take appointment");
     console.log("reqbody is ", req.body);
-    try {
-        const file = req.files;
-        const patientFile = file.PatientFile;
-        const audioFile = file.PatientAudio;
-        // console.log(patientFile)
-        // console.log(audioFile);
-        const { Patient, Docter, Date, Time } = req.body;
-        console.log("Patient id is", Patient);
+    // try {
+    const file = req.files
+    // const patientfile = ["req.files",req.files.PatientFile];
+    const PatientFile = file.PatientFile;
+    const PatientAudio = file.PatientAudio?.[0];
 
-        const patientAppointData = await Appointment.create({
-            Patient: Patient,
-            Docter: Docter,
-            Date: Date,
-            Time: Time,
-            // PatientAudio: audioFile,
-            PatientFile: patientFile
-        })
+    console.log("files are->", file);//image/png'
+    console.log("PatientFile", PatientFile);
+    // console.log(PatientAudio); //audio/wav
 
-        console.log(patientAppointData);
-        const totalAppointmenttoday=await Appointment.countDocuments({Docter:Docter});
-        console.log(totalAppointmenttoday);
-        io.emit("totalPatient",totalAppointmenttoday);
-        
-        return res.status(200).json({ message: "patient appointment booked" })
+    // const fileWithExt = [];
 
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ message: "something is wrong ", err })
+    // PatientFile.forEach((file) => {
+    //     const fileExt = mime.extension(file.mimetype); // get ext like 'png'
+    //     const filenameWithExt = `${file.filename}.${fileExt}`; // combine
+    //     fileWithExt.push(filenameWithExt); // store in array
+    // });
+
+    // console.log(fileWithExt);
+    // const ext2 = mime.extension(PatientAudio.mimetype);
+
+
+
+    const { Patient, Docter, Date, Time } = req.body;
+    console.log("Patient id is", Patient);
+
+
+    // const patientAppointData = await Appointment.create({
+    //     Patient: Patient,
+    //     Docter: Docter,
+    //     Date: Date,
+    //     Time: Time,
+    //     // PatientAudio: audioFile,
+    //     // PatientFile: patientFile
+    // });
+
+    // console.log("new appointment", patientAppointData._id);
+
+
+    //         const fileId = uuid();
+    //         if (PatientFile) {
+    //             await uploadFileToS3(PatientFile, fileWithExt, patientAppointData._id);
+    //         }
+    //         if (PatientAudio) {
+    //             await uploadFileToS3(PatientAudio, `${fileId}.${ext2}`, patientAppointData._id);
+    //         }
+
+    //         const totalAppointmenttoday = await Appointment.countDocuments({ Docter: Docter });
+    //         console.log("totalAppointmenttoday", totalAppointmenttoday);
+    //         io.emit("totalPatient", totalAppointmenttoday);
+
+    //         return res.status(200).json({ message: "patient appointment booked" })
+
+    //     } catch (err) {
+    //         console.log(err);
+    //         res.status(500).json({ message: "something is wrong ", err })
+    //     }
+    // }
+
+
+
+
+    const config1 = {
+        region: process.env.AWS_REGION,
+        credentials: {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        },
     }
+    const client = new S3Client(config1);
+
+    // async function uploadFileToS3(file, keyId, appointmentId) {
+    // const uploadFileToS3 = async (PatientFile, PatientAudio) => {
+    try {
+        if (!PatientAudio && PatientFile) {
+            return res.status(400).json({ message: "No files uploaded" })
+        }
+
+        let uploadedFiles = [];
+        let audioFileUrl = null;
+        if (PatientFile && Array.isArray(PatientFile)) {
+            // const patientmulFiles = async () => {
+
+            uploadedFiles = await Promise.all(
+                PatientFile.map(async (file) => {
+                    const patientFileStream = fs.createReadStream(path.resolve(file.path));
+
+                    const ext = mime.extension(file.mimetype);
+                    const keyId = `${file.filename}.${ext}`
+                    const input = {
+
+                        Bucket: "patientsensitivedata",
+                        Body: patientFileStream,
+                        Key: keyId,
+                        ContentType: file.mimetype
+                    };
+
+                    await client.send(new PutObjectCommand(input));
+                    fs.unlink(file.path, (err) => {
+                        console.log("err deleting patientfiles", err)
+                    })
+
+                    return keyId;
+
+                })
+            )
+            // }
+            // await patientmulFiles();
+            // const results = await Promis.all(patientmulFiles); //// Wait for all uploads to finish
+            // console.log("All files uploaded:", results);
+        }
+
+        if (PatientAudio) {
+            // const audio = PatientAudio[0]
+            const patientFileStream = fs.createReadStream(path.resolve(PatientAudio.path));
+            const ext = mime.extension(PatientAudio.mimetype);
+            const keyId = `${PatientAudio.filename}.${ext}`
+            const input = {
+
+                Bucket: "patientsensitivedata",
+                Body: patientFileStream,
+                Key: keyId,
+                ContentType: PatientAudio.mimetype
+            };
+            await client.send(new PutObjectCommand(input));
+            fs.unlink(PatientAudio.path, (err) => {
+                if (err) {
+                    console.log("err deleting files", err)
+                }
+            })
+
+            audioFileUrl = keyId;
+
+
+
+        }
+        const saveInDb = new Appointment({
+            Patient: req.body.Patient,
+            Docter: req.body.Docter,
+            Date: req.body.Date,
+            Time: req.body.Time,
+            PatientFile: uploadedFiles,
+            PatientAudio: audioFileUrl,
+
+        })
+        const bookAppointment = await saveInDb.save();
+
+        console.log(bookAppointment);
+        const totalAppointments = await Appointment.countDocuments({ Docter });
+
+        io.emit("totalPatient", totalAppointments);
+        if (bookAppointment) {
+            res.status(200).json({ message: "Appointment Successfully Booked" })
+        }
+
+        // }
+    }
+    catch (err) {
+        console.log("Error", err);
+        res.status(500).json({ message: "internale server Error", error: err.message })
+    }
+
 }
+//     try {
+//         const patientFileStream = fs.createReadStream(path.resolve(file.path));
+
+//         const input = {
+
+//             Bucket: "patientsensitivedata",
+//             Body: patientFileStream,
+//             Key: keyId,
+//             ContentType: file.mimetype
+//         };
+//         // const command = new PutObjectCommand(input);
+//         const response = await client.send(command);
+//         console.log(response);
+//         if (response.$metadata.httpStatusCode === 200) {
+//             try {
+//                 console.log(file.fieldname);
+//                 const addDetails = await Appointment.findByIdAndUpdate(appointmentId, { $set: { [file.fieldname]: keyId } }, { new: true });
+//                 console.log("file details added to appointment", addDetails);
+//             }
+//             catch (err) {
+//                 console.error("  updating appointment with file details:", err);
+//             }
+
+//         }
+//         else {
+//             console.error("Error uploading file to S3:", response);
+//         }
+
+//     }
+//     catch (err) {
+//         console.error("Error uploading file to S3:", err);
+//     }
+
+
+
+
+
 const getappointTime = async (req, res) => {
     try {
         console.log("request for time is came")
@@ -174,4 +369,5 @@ const getDocterList = async (req, res) => {
 
 
 
-export { getDocterList, getappointTime, appointment, getuserprofile, updateuserdata, patdel }
+export { appointment, getappointTime, getDocterList, getuserprofile, patdel, updateuserdata };
+

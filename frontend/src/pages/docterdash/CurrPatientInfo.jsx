@@ -14,7 +14,7 @@ export default function CurrentPatient() {
   const [patientLastVisit, setPatientLastVisit] = useState(false);
   const [currno, setCurrNo] = useState(0);
   const { docterAPI } = useContext(docterContext);
-  const [currPatient, setcurrPatient] = useState([]);
+  const [patientcollectioninfo, setPatientCollectionInfo] = useState([]);
   const [singlepatient, setSinglePatient] = useState();
   const [currpatienthistory, setCurrPatientHistory] = useState(null);
   const { patientcollection, setPatientCollection } = useContext(
@@ -32,11 +32,12 @@ export default function CurrentPatient() {
     // setcurrPatient();
     if (!patientcollection) return;
     const fetchPatientData = async () => {
+     
       // console.log("currPatient", currPat);
       try {
         const res = await docterAPI.post("/getpatientdet", patientcollection);
         console.log(res.data);
-        setcurrPatient(res.data.newArray);
+        setPatientCollectionInfo(res.data.newArray);
       } catch (err) {
         console.error("Error fetching patient details", err);
       }
@@ -45,29 +46,50 @@ export default function CurrentPatient() {
   }, [patientcollection]);
 
   useEffect(() => {
-    if (currPatient.length > 0) {
-      console.log(currPatient.length);
-      if (currno < currPatient.length) {
-        setSinglePatient(currPatient[currno]);
-        setCurrPatientHistory(patientcollection[currno]);
+    if (patientcollectioninfo.length > 0) {
+      console.log(patientcollectioninfo.length);
+      if (currno < patientcollectioninfo.length) {
+        console.log(patientcollection);
+        console.log(
+          "patientcollectioninfo[currno]",
+          patientcollectioninfo[currno]
+        );
+        setSinglePatient(patientcollectioninfo[currno]);
+        const currUser = async () => {
+         
+          const fetchedFromAws = await docterAPI.post("/getpatientfile", {
+            patientfile: patientcollection[currno].PatientFile,
+            patientAudio: patientcollection[currno].PatientAudio,
+          });
+          console.log(fetchedFromAws.data);
+          setCurrPatientHistory(fetchedFromAws.data);
+        };
+        currUser();
       } else {
         setSinglePatient("Today Appointment completed");
         setCurrPatientHistory(null);
       }
     }
-  }, [currno, currPatient]);
+  }, [currno, patientcollectioninfo]);
+  // , currPatient]
+
+  useEffect(() => {
+    console.log("singlepatient", singlepatient);
+  }, [singlepatient]);
 
   const noteHandler = (e) => {
     e.preventDefault();
     setNotes(true);
   };
   const handlePatientinfo = () => {
+    console.log("patient info clicked");
     setPatientLastVisit(true);
   };
 
+  
   return (
     <div className="patient-Info">
-      {typeof currpatienthistory}
+      {typeof singlepatient}
       {patientLastVisit && currpatienthistory && (
         <PatientVistiH
           patientLastVisit={patientLastVisit}
@@ -100,9 +122,9 @@ export default function CurrentPatient() {
 
         <div>
           <h3>
-            {typeof singlepatient === "string"
-              ? singlepatient
-              : singlepatient?.UserName ?? "Loading ..."}
+            {typeof singlepatient != "string" && singlepatient?.UserName
+              ? singlepatient.UserName
+              : "Loading ..."}
           </h3>
           <div
             style={{ display: "flex", fontSize: "0.8rem" }}

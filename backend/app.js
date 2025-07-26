@@ -2,7 +2,7 @@ import express from 'express';
 import cors from "cors";
 
 
-import {userRoutes} from "./src/routes/userroutes.js";
+import { userRoutes } from "./src/routes/userroutes.js";
 import { Appointment } from './src/models/appointment.js';
 import mongoose from 'mongoose';
 import { docterRoutes } from "./src/routes/doctRoutes.js"
@@ -24,6 +24,18 @@ const io = new Server(server, {
   }
 })
 export { io };
+
+// const appointmentdata = async () => {
+//   try {
+//     await Appointment.deleteMany({});
+//     console.log("appointment data deleted");
+//   }
+//   catch (err) {
+//     console.error("Error deleting appointment data:", err);
+//   }
+// }
+// appointmentdata();
+
 
 io.on("connection", async (socket) => {
   console.log(socket.id)

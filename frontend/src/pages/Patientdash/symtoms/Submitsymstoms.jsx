@@ -36,15 +36,21 @@ export const AudioRecorderComponent = () => {
 
   // handle file input
   const handleFileInput = (e) => {
-    const file = e.target.files[0];
+    console.log(e.target.files)
+    const file = Array.from(e.target.files); // Convert FileList to real array
+    console.log(file);
     if (file) {
       setFormData((prev) => ({
         ...prev,
-        SymptomFile: file,
+        PatientFile: [...prev.PatientFile, ...file],
       }));
     }
   };
+  useEffect(() => {
+    console.log(formData.PatientFile);
+  }, [formData.PatientFile]);
 
+  // This is a JavaScript (React) expression used to programmatically trigger a click event on a hidden <input type="file" /> element. It’s typically used to open the file picker dialog without requiring the user to manually click the input.
   const handleFileButtonClick = () => {
     fileInput.current.click();
   };
@@ -55,18 +61,26 @@ export const AudioRecorderComponent = () => {
     formData1.append("Docter", formData.Docter);
     formData1.append("Date", formData.Date);
     formData1.append("Time", formData.Time);
-    if (formData.SymptomFile) {
-      formData1.append("PatientFile", formData.SymptomFile);
+    if (formData.PatientFile) {
+      console.log(formData.PatientFile);
+      formData.PatientFile.forEach((file)=>{
+      const allfiles = formData1.append("PatientFile",file);
+
+      })
     }
     if (formData.PatientAudio) {
       formData1.append("PatientAudio", formData.PatientAudio);
     }
 
     try {
-      console.log("appointment progress");
-      const result = await client.post("/appointment", formData1, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      console.log("formData1",formData1.PatientFile);
+      const result = await client.post(
+        "/appointment",
+        formData1
+        //    {
+        //   headers: { "Content-Type": "multipart/form-data" },
+        // }
+      );
       console.log(result);
       showSnakbar("Appointment submitted successfully");
       // console.log("appointment booked");
@@ -77,7 +91,7 @@ export const AudioRecorderComponent = () => {
         Date: null,
         Time: "",
         PatientAudio: null,
-        SymptomFile: null,
+        PatientFile: [],
       }));
       setAppointmentController(false);
       // console.log("reset");

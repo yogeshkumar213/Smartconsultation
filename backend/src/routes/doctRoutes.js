@@ -8,6 +8,9 @@ import bcrypt from "bcrypt";
 import { verifyDocter } from "../controllers/mongoManeger.js";
 import { Appointment } from "../models/appointment.js";
 import { io } from "../../app.js";
+
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 dotenv.config();
 
 
@@ -17,19 +20,102 @@ dotenv.config();
 
 
 // })
+
+const getAudioandReport = async (data) => {
+    console.log("getAudioandReport called with req:", data);
+    if (!data) return;
+
+    const config2 = {
+        region: process.env.AWS_REGION,
+        credentials: {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+        }
+    }
+
+    const input = {
+        // Bucket: "patientsensitivedata",
+        // Key: data,
+        // Range: "bytes=0-9"
+
+    }
+
+    const client = new S3Client(config2);
+
+
+    const command = new GetObjectCommand(input);
+    const response = await client.send(command);
+    // console.log("response from aws", response);
+    const url = await getSignedUrl(client, command, { expiresIn: 3600 });
+    console.log("signed url", url);
+    return url;
+}
 export const docterRoutes = (io) => {
+
+
+    router.post("/getpatientfile", verifyDocter, async (req, res) => {
+        const { patientfile, patientAudio } = req.body;
+        console.log("patientfile", patientfile);
+        console.log("patientAudio", patientAudio);
+        console.log("currAppointmentId", patientfile, patientAudio);
+        try {
+            const appointmentData = await Appointment.findOne({ PatientAudio: patientAudio });
+            console.log("currAppointmentData", appointmentData);
+            let patientFileUrls = [];
+            let patientAudio = null;
+
+            if (appointmentData.PatientFile && Array.isArray(appointmentData.PatientFile)) {
+                const promises = appointmentData.PatientFile.map(async (el) => {
+                    return await getAudioandReport(el.PatientFile)
+
+
+                })
+
+                patientFileUrls.push(...(await Promise.all(promises)));
+                if (appointmentData.PatientAudio) {
+                    const result = await getAudioandReport(appointmentData.PatientAudio);
+                    patientAudio = result;
+
+                }
+
+
+
+                console.log("patientfileurls", patientFileUrls);
+                console.log("patientAudio", patientAudio)
+                return res.status(200).json({ appointmentData, PatientFile: patientFileUrls, audioFile: patientAudio });
+            }
+            else {
+                const audioFile = await getAudioandReport(appointmentData.PatientAudio);
+                console.log("audioFile", audioFile);
+                return res.status(200).json({ appointmentData, audioFile });
+            }
+
+
+
+
+            // return res.status(200).json({ appointmentData, PatientFile, audioFile });
+
+
+
+        }
+        catch (err) {
+            console.error("Error fetching patient file", err);
+        }
+    });
+
+
 
     router.get("/api/appointments", verifyDocter, async (req, res) => {
         console.log(req.docterId);
         try {
-            const totalCollection = await Appointment.find({ Docter: req.docterId });
-            const totalAppointment = totalCollection.length;
-            console.log(totalCollection);
+            const Collection = await Appointment.find({ Docter: req.docterId });
+            const totalAppointment = Collection.length;
+            console.log(Collection);
             console.log(totalAppointment);
             // await Appointment.countDocuments({Docter:req.docterId});
 
             console.log(totalAppointment);
-            return res.status(200).json({ totalAppointment, totalCollection })
+            return res.status(200).json({ totalAppointment, Collection })
         }
         catch (err) {
             return res.status(500).json({ message: "docter not found" })

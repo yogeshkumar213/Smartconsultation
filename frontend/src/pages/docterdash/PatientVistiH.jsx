@@ -1,15 +1,13 @@
-import * as React from "react";
-import Button from "@mui/material/Button";
-import { useState } from "react";
-import { styled } from "@mui/material/styles";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
-import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
-import Typography from "@mui/material/Typography";
-import { blue } from "@mui/material/colors";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import IconButton from "@mui/material/IconButton";
+import { styled } from "@mui/material/styles";
+import * as React from "react";
+import { useState } from "react";
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   "& .MuiDialogContent-root": {
@@ -30,7 +28,7 @@ export const PatientVistiH = ({
   const [docMessage, setDocMessage] = useState("hello"); // crate context api
 
   const [activeTab, setActiveTab] = useState("Note");
-  const [report, setReport] = useState(null);
+
   const tabs = ["Note", "History", "Report"];
   const [reportData, setReportData] = useState([
     "Diagnosed with asthma in 2015; has experienced intermittent symptoms since then, typically triggered by physical exertion or environmental factors such as dust and cold air. Uses prescribed inhalers as needed.",
@@ -40,23 +38,13 @@ export const PatientVistiH = ({
   const handleTabChange = (key) => {
     console.log(key);
     setActiveTab(key);
-    if (key === "Report") {
-      const bufferData = currpatienthistory?.PatientFile?.data;
-      console.log(bufferData)
-
-      if (bufferData) {
-        const stringData = new TextDecoder("utf-8").decode(
-          new Uint8Array(bufferData)
-        );
-        console.log(stringData);
-        setReport(stringData);
-      }
-    }
   };
 
-
   //   };
-  console.log(currpatienthistory);
+  console.log("currpatienthistory file and report ", currpatienthistory);
+
+  console.log("currpatienthistory file", currpatienthistory.PatientFile);
+
   const handleClose = () => {
     setPatientLastVisit(false);
   };
@@ -166,18 +154,30 @@ export const PatientVistiH = ({
 
               <p>Past Visits</p>
             </div>
-          ) : activeTab === "Report" && report != null ? (
-            // <div>report</div>
-            <textarea
-              rows={8}
-              cols={15}
-              style={{ backgroundColor: "white" }}
-              value={report}
-              readOnly
-            >
-              {}
-            </textarea>
-          ) : null}
+          ) : activeTab === "Report" && currpatienthistory.PatientFile ? (
+            currpatienthistory.PatientFile.map((fileUrl, index) => {
+              const ispdf = fileUrl.endsWith(".pdf");
+              return (
+                <div key={index} style={{ marginBottom: "2px" }}>
+                  {ispdf ? (
+                    <iframe src={fileUrl} width="100%" height="100%" />
+                  ) : (
+                    <img
+                      src={fileUrl}
+                      alt="uploaded file"
+                      style={{
+                        width: "100%",
+                        maxHeight: "500px",
+                        objectFit: "contain",
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })
+          ) : // <div>report</div>
+
+          null}
         </DialogContent>
         <DialogActions>
           <Button autoFocus onClick={handleClose}>
