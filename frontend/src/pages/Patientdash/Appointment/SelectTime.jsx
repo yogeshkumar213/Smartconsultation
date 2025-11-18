@@ -11,11 +11,11 @@ export default function SelectTime() {
   const { client } = useAuth();
 
   const [age, setAge] = React.useState("");
-  const [gender,setGender]=useState("");
+  const [gender, setGender] = useState("");
 
-  const handleGenderChange=()=>{
-
-  }
+  const handleGenderChange = (event) => {
+    setGender(event.target.value);
+  };
   const { formData, setFormData } = useFormData();
   useEffect(() => {
     client
@@ -81,13 +81,23 @@ export default function SelectTime() {
         );
       })}
       {appointtime && (
-        <div>
-        <AgeGender label="Gender" value={gender} onChange={handleGenderChange} options={[
-          {value:"male" ,label:"Male"},{value:"female",label:"Female"},{value:"other",label:"other"}]} age={age} setAge={setAge} gender={gender} setGender={setGender}/>
+        <div className="mt-8 ">
+          <AgeGender
+            label="Gender"
+            value={gender}
+            onChange={handleGenderChange}
+            options={[
+              { value: "male", label: "Male" },
+              { value: "female", label: "Female" },
+             
+            ]}
+            age={age}
+            setAge={setAge}
+            gender={gender}
+            setGender={setGender}
+          />
         </div>
       )}
-
-
     </div>
   );
 }

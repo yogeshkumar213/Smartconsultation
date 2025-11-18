@@ -141,16 +141,7 @@ const appointment = async (req, res) => {
     console.log("PatientFile", PatientFile);
     // console.log(PatientAudio); //audio/wav
 
-    // const fileWithExt = [];
 
-    // PatientFile.forEach((file) => {
-    //     const fileExt = mime.extension(file.mimetype); // get ext like 'png'
-    //     const filenameWithExt = `${file.filename}.${fileExt}`; // combine
-    //     fileWithExt.push(filenameWithExt); // store in array
-    // });
-
-    // console.log(fileWithExt);
-    // const ext2 = mime.extension(PatientAudio.mimetype);
 
 
 
@@ -158,37 +149,6 @@ const appointment = async (req, res) => {
     console.log("Patient id is", Patient);
 
 
-    // const patientAppointData = await Appointment.create({
-    //     Patient: Patient,
-    //     Docter: Docter,
-    //     Date: Date,
-    //     Time: Time,
-    //     // PatientAudio: audioFile,
-    //     // PatientFile: patientFile
-    // });
-
-    // console.log("new appointment", patientAppointData._id);
-
-
-    //         const fileId = uuid();
-    //         if (PatientFile) {
-    //             await uploadFileToS3(PatientFile, fileWithExt, patientAppointData._id);
-    //         }
-    //         if (PatientAudio) {
-    //             await uploadFileToS3(PatientAudio, `${fileId}.${ext2}`, patientAppointData._id);
-    //         }
-
-    //         const totalAppointmenttoday = await Appointment.countDocuments({ Docter: Docter });
-    //         console.log("totalAppointmenttoday", totalAppointmenttoday);
-    //         io.emit("totalPatient", totalAppointmenttoday);
-
-    //         return res.status(200).json({ message: "patient appointment booked" })
-
-    //     } catch (err) {
-    //         console.log(err);
-    //         res.status(500).json({ message: "something is wrong ", err })
-    //     }
-    // }
 
 
 
@@ -205,7 +165,7 @@ const appointment = async (req, res) => {
     // async function uploadFileToS3(file, keyId, appointmentId) {
     // const uploadFileToS3 = async (PatientFile, PatientAudio) => {
     try {
-        if (!PatientAudio && PatientFile) {
+        if (!PatientAudio && !PatientFile) {
             return res.status(400).json({ message: "No files uploaded" })
         }
 
@@ -214,7 +174,7 @@ const appointment = async (req, res) => {
         if (PatientFile && Array.isArray(PatientFile)) {
             // const patientmulFiles = async () => {
 
-            uploadedFiles = await Promise.all(
+            uploadedFiles = await Promise.all(  // // Wait for all uploads to finish
                 PatientFile.map(async (file) => {
                     const patientFileStream = fs.createReadStream(path.resolve(file.path));
 
@@ -233,14 +193,15 @@ const appointment = async (req, res) => {
                         console.log("err deleting patientfiles", err)
                     })
 
-                    return keyId;
+                    return {
+                        key: keyId,
+                        mimetype: file.mimetype
+                    }
+
 
                 })
             )
-            // }
-            // await patientmulFiles();
-            // const results = await Promis.all(patientmulFiles); //// Wait for all uploads to finish
-            // console.log("All files uploaded:", results);
+
         }
 
         if (PatientAudio) {
@@ -262,9 +223,10 @@ const appointment = async (req, res) => {
                 }
             })
 
-            audioFileUrl = keyId;
-
-
+            audioFileUrl = {
+                key: keyId,
+                mimetype: PatientAudio.mimetype
+            }
 
         }
         const saveInDb = new Appointment({
@@ -286,7 +248,6 @@ const appointment = async (req, res) => {
             res.status(200).json({ message: "Appointment Successfully Booked" })
         }
 
-        // }
     }
     catch (err) {
         console.log("Error", err);
@@ -294,38 +255,7 @@ const appointment = async (req, res) => {
     }
 
 }
-//     try {
-//         const patientFileStream = fs.createReadStream(path.resolve(file.path));
 
-//         const input = {
-
-//             Bucket: "patientsensitivedata",
-//             Body: patientFileStream,
-//             Key: keyId,
-//             ContentType: file.mimetype
-//         };
-//         // const command = new PutObjectCommand(input);
-//         const response = await client.send(command);
-//         console.log(response);
-//         if (response.$metadata.httpStatusCode === 200) {
-//             try {
-//                 console.log(file.fieldname);
-//                 const addDetails = await Appointment.findByIdAndUpdate(appointmentId, { $set: { [file.fieldname]: keyId } }, { new: true });
-//                 console.log("file details added to appointment", addDetails);
-//             }
-//             catch (err) {
-//                 console.error("  updating appointment with file details:", err);
-//             }
-
-//         }
-//         else {
-//             console.error("Error uploading file to S3:", response);
-//         }
-
-//     }
-//     catch (err) {
-//         console.error("Error uploading file to S3:", err);
-//     }
 
 
 

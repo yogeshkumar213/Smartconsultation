@@ -13,18 +13,38 @@ const appointmentSchema = new mongoose.Schema({
     Time: {
         type: String
     },
+    ConsultationNotes: {
+
+        Symtoms: String,
+        ProbableCause: String,
+        PrescribedMedications: String,
+        TreatmentAdvice: String,
+        FollowUpSuggestions: String,
+        createdAt:{
+            type:Date,
+            default:Date.now,
+             
+        }
+    },
     createdAt: {
         type: Date,
         default: Date.now,
     },
     PatientAudio: {
-        type: String,
-       
+        type: {
+            key: String,
+            mimetype: String
+        },
+
     },
     PatientFile: {
-        type: [String],
-         default:[]
-    }
+        type: [{
+            key: String,
+            mimetype: String
+        }],
+        default: []
+    },
+
 });
 const Appointment = mongoose.model('Appointment', appointmentSchema);
 

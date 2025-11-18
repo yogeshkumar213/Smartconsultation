@@ -3,7 +3,7 @@ import "./AppointmentList.css";
 import Button from "@mui/material/Button";
 import { DocNote } from "./DocNote";
 import { useState } from "react";
-import { PatientVistiH } from "./PatientVistiH";
+import { CurrPatientDetails} from "./CurrPatientDeltails";
 import { PatientCollectionContext } from "../../context/DocterAuthContext";
 import { useContext } from "react";
 import { useEffect } from "react";
@@ -12,14 +12,19 @@ import { docterContext } from "../../context/DocterAuthContext";
 export default function CurrentPatient() {
   const [notes, setNotes] = useState(false);
   const [patientLastVisit, setPatientLastVisit] = useState(false);
-  const [currno, setCurrNo] = useState(0);
+  // const [currno, setCurrNo] = useState(0);
   const { docterAPI } = useContext(docterContext);
   const [patientcollectioninfo, setPatientCollectionInfo] = useState([]);
   const [singlepatient, setSinglePatient] = useState();
-  const [currpatienthistory, setCurrPatientHistory] = useState(null);
-  const { patientcollection, setPatientCollection } = useContext(
-    PatientCollectionContext
-  );
+
+  const {
+    patientcollection,
+    setPatientCollection,
+    currPatientDocument,
+    setCurrPatientDocument,
+    currno,
+    setCurrNo
+  } = useContext(PatientCollectionContext);
 
   console.log(patientcollection);
 
@@ -32,7 +37,6 @@ export default function CurrentPatient() {
     // setcurrPatient();
     if (!patientcollection) return;
     const fetchPatientData = async () => {
-     
       // console.log("currPatient", currPat);
       try {
         const res = await docterAPI.post("/getpatientdet", patientcollection);
@@ -50,24 +54,26 @@ export default function CurrentPatient() {
       console.log(patientcollectioninfo.length);
       if (currno < patientcollectioninfo.length) {
         console.log(patientcollection);
+
         console.log(
           "patientcollectioninfo[currno]",
           patientcollectioninfo[currno]
         );
-        setSinglePatient(patientcollectioninfo[currno]);
+        setSinglePatient(patientcollectioninfo[currno]);//patientcollectionifo ek detailed array hai ye wo array hai jisme particular doceter k sare patient hai
         const currUser = async () => {
-         
           const fetchedFromAws = await docterAPI.post("/getpatientfile", {
+            // note->patientcollection k ander mere wo patient ki list hai jinki field mai jo docter check kar rha hai uski id hai
+            // or patientcollection[currno]->maine us patientcollection[currno] mai se ek document utha liya or (patientcollection[currno].patientfile) ->us document mai se maine pateintfile and audio ki id utha li hai
             patientfile: patientcollection[currno].PatientFile,
-            patientAudio: patientcollection[currno].PatientAudio,
+            patientAudio1: patientcollection[currno].PatientAudio,
           });
           console.log(fetchedFromAws.data);
-          setCurrPatientHistory(fetchedFromAws.data);
+          setCurrPatientDocument(fetchedFromAws.data); //currpatientDocument mai sirf mera currpatient hai uski purri document hai document mtlb single entity naa ki uski history
         };
         currUser();
       } else {
         setSinglePatient("Today Appointment completed");
-        setCurrPatientHistory(null);
+        setCurrPatientDocument(null);
       }
     }
   }, [currno, patientcollectioninfo]);
@@ -86,18 +92,29 @@ export default function CurrentPatient() {
     setPatientLastVisit(true);
   };
 
+
+  // console.log("patientcollection[currno]._id",patientcollection[currno]._id);
   
   return (
     <div className="patient-Info">
-      {typeof singlepatient}
-      {patientLastVisit && currpatienthistory && (
-        <PatientVistiH
+      {typeof singlepatient == "undefined"
+        ? "No patients assigned yet"
+        : typeof singlepatient}
+      {patientLastVisit && ( //currpatienthistory
+        <CurrPatientDetails
           patientLastVisit={patientLastVisit}
           setPatientLastVisit={setPatientLastVisit}
-          currpatienthistory={currpatienthistory}
+          currPatientDocument={currPatientDocument }         
+          consultationInputId={patientcollection[currno]._id}
         />
       )}
-      {notes && <DocNote notes={notes} setNotes={setNotes} />}
+      {notes && (
+        <DocNote
+          notes={notes}
+          setNotes={setNotes}
+          consultationInputId={patientcollection[currno]._id}
+        />
+      )}
       <div
         style={{
           display: "flex",
@@ -112,7 +129,7 @@ export default function CurrentPatient() {
           size="medium"
           onClick={noteHandler}
         >
-          NOTES
+          Consultation Input
         </Button>
       </div>
       <div className="profileIcon-And-patientInfo">
@@ -124,7 +141,7 @@ export default function CurrentPatient() {
           <h3>
             {typeof singlepatient != "string" && singlepatient?.UserName
               ? singlepatient.UserName
-              : "Loading ..."}
+              : "No patients assigned yet"}
           </h3>
           <div
             style={{ display: "flex", fontSize: "0.8rem" }}

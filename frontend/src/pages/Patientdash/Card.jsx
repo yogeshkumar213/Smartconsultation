@@ -48,7 +48,7 @@ export const Card = () => {
       .catch((err) => {
         if (
           err.response.data.message == "Access token is not found" ||
-          "invalid or expired token"
+         err.response.data.message === "invalid or expired token"
         ) {
           navigate("/auth/signin");
           showSnakbar(err.response.data.message);

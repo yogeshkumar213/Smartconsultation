@@ -4,8 +4,17 @@ import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 
-export const AgeGender = ({ label, value, onChange, options,age,setAge,gender,setGender }) => {
-//   const [age, setAge] = React.useState("");
+export const AgeGender = ({
+  label,
+  value,
+  onChange,
+  options,
+  age,
+  setAge,
+  gender,
+  setGender,
+}) => {
+  //   const [age, setAge] = React.useState("");
 
   const handleChange = (event) => {
     setAge(event.target.value);
@@ -22,11 +31,13 @@ export const AgeGender = ({ label, value, onChange, options,age,setAge,gender,se
         onChange={onChange}
       >
         <MenuItem value="">
-          <em>None</em>
+          {/* <em>None</em> */}
         </MenuItem>
-        {options.map((e) => {
-          <MenuItem key={e.value} value={e.value}>e.label</MenuItem>;
-        })}
+        {options.map((e) => (
+          <MenuItem key={e.value} value={e.value}>
+            {e.label}
+          </MenuItem>
+        ))}
       </Select>
     </FormControl>
   );

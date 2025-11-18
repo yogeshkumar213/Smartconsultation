@@ -13,6 +13,7 @@ import axios from "axios";
 
 const client = axios.create({
   baseURL: "http://localhost:5050/api/v1",
+  withCredentials: true,
 });
 const decodeJWT = jwtDecode;
 
@@ -24,6 +25,38 @@ client.interceptors.request.use((config) => {
   }
   return config;
 });
+client.interceptors.response.use(
+  (response) => response,
+  async (err) => {
+    const originalRequest = err.config;
+    console.log(originalRequest);
+    if (!err.response) {
+      return Promise.reject(err);
+    }
+    console.log(err);
+    if ((err.response?.status === 401 || err.response?.status === 403) && !originalRequest._retry) {
+
+      originalRequest._retry = true;
+      try {
+        const res = await axios.post(
+          "http://localhost:5050/api/v1/refresh",
+          {},
+          {
+            withCredentials: true,
+          }
+        );
+        const newAccessToken = res.data.token;
+        localStorage.setItem("token", newAccessToken);
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return client(originalRequest);
+      } catch (refreshErr) {
+        console.log(refreshErr);
+        return Promise.reject(refreshErr);
+      }
+    }
+    return Promise.reject(err);
+  }
+);
 
 export const AuthProvider = ({ children }) => {
   const [User, setUser] = useState(" ");
@@ -107,7 +140,7 @@ export const AuthProvider = ({ children }) => {
         [
           ["token", request.data.token],
           ["patientid", request.data.existUser._id],
-        ].forEach(([key,value])=>localStorage.setItem(key,value));
+        ].forEach(([key, value]) => localStorage.setItem(key, value));
         // setFormData((prev) => ({
         //   ...prev,
         //   Patient: request.data._id,

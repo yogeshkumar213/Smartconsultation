@@ -6,6 +6,7 @@ import { userRoutes } from "./src/routes/userroutes.js";
 import { Appointment } from './src/models/appointment.js';
 import mongoose from 'mongoose';
 import { docterRoutes } from "./src/routes/doctRoutes.js"
+import cookieParser from "cookie-parser";
 import multer from 'multer';
 import path from "path";
 const upload = multer({ dest: './src/uploads/' })
@@ -48,9 +49,11 @@ io.on("connection", async (socket) => {
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors());
-
-
+app.use(cors({
+    origin: "http://localhost:5173",  // Your frontend's address
+  credentials: true, 
+}));
+app.use(cookieParser());
 
 
 

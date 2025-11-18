@@ -1,12 +1,14 @@
 import * as React from "react";
 import { styled } from "@mui/material/styles";
+import { useContext, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import Slider from "@mui/material/Slider";
 import MuiInput from "@mui/material/Input";
 import VolumeUp from "@mui/icons-material/VolumeUp";
-import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import VolumeOffIcon from "@mui/icons-material/VolumeOff";
+import { PatientCollectionContext } from "../../../context/DocterAuthContext";
 
 const Input = styled(MuiInput)`
   width: 42px;
@@ -14,9 +16,21 @@ const Input = styled(MuiInput)`
 
 export default function InputSlider() {
   const [value, setValue] = React.useState(30);
-  const [stopAudio, setStopAudio] = React.useState(false);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [isprogress, setIsProgress] = React.useState(null);
+  const { currPatientDocument, setCurrPatientDocument } = useContext(
+    PatientCollectionContext
+  );
+
+  const audiRef = React.useRef(null);
+  const intervalRef = React.useRef(null);
 
   const handleSliderChange = (event, newValue) => {
+    if (audiRef.current) {
+      const jump = (newValue * audiRef.current.duration) / 100;
+      audiRef.current.currentTime = jump;
+      if (isPlaying) audiRef.current.play();
+    }
     setValue(newValue);
   };
 
@@ -32,13 +46,48 @@ export default function InputSlider() {
     }
   };
   const handlePlaybtn = () => {
-    setStopAudio(!stopAudio);
+    setIsPlaying((prev) => !isPlaying);
   };
+
+  useEffect(() => {
+    if (!audiRef.current) return;
+    if (isPlaying) {
+      audiRef.current.play();
+  
+      intervalRef.current = setInterval(() => {
+        const curTime = audiRef.current.currentTime;// ye audio ka current time nikalta hai ki audio kitne time tak challa hai second mai 
+        const duration = audiRef.current.duration;//ye audio ki total length nikalta hai 
+        const percentage = (curTime / duration) * 100;//Ye calculate karta hai audio kitna percent play ho chuka hai.
+        setValue(percentage);
+      }, 500);
+
+      
+    } else {
+      audiRef.current.pause();
+    }
+
+    return () => clearInterval(intervalRef.current);
+  }, [isPlaying]);
+
+  useEffect(() => {
+    console.log(currPatientDocument);
+    if (currPatientDocument?.audioFile) {
+      audiRef.current = new Audio(currPatientDocument.audioFile.signedUrl);
+      console.log(audiRef.current);
+      audiRef.current.onended = () => {
+        setIsPlaying(false);
+      };
+    }
+  }, [currPatientDocument]);
 
   return (
     <Box className="playbutton-and-volume">
       <div className="playbutton" onClick={handlePlaybtn}>
-      {stopAudio===true? <i class="fa-solid fa-pause"></i>:<i className="fa-solid fa-play"></i>}  
+        {isPlaying === true ? (
+          <i className="fa-solid fa-pause"></i>
+        ) : (
+          <i className="fa-solid fa-play"></i>
+        )}
       </div>
 
       <div style={{ paddingLeft: "1rem" }}>
@@ -55,7 +104,7 @@ export default function InputSlider() {
           }}
         >
           <Grid onClick={handlePlaybtn}>
-            {stopAudio ?<VolumeUp />:<VolumeOffIcon/>}
+            {isPlaying ? <VolumeUp /> : <VolumeOffIcon />}
           </Grid>
           <Grid size="grow">
             <Slider
@@ -76,8 +125,8 @@ export default function InputSlider() {
                 max: 100,
                 type: "number",
                 "aria-labelledby": "input-slider",
-              }} */}
-            {/* /> */}
+              }} 
+             /> */}
           </Grid>
         </Grid>
       </div>

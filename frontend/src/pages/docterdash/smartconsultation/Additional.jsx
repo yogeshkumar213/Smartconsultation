@@ -1,13 +1,14 @@
-import React from "react";
+import React, { useContext, useEffect } from "react";
 import "../AppointmentList.css";
 import { useState } from "react";
 import "../AppointmentList.css";
 import { UploadFile } from "./UploadFile";
+import { docterContext } from "../../../context/DocterAuthContext";
 export default function AdditionalInfo() {
   const [File, setFile] = useState("");
 
+
   return (
-    <div className="Additional">
     <div className="Additional-info">
       <h2>Patient File</h2>
       <b>
@@ -39,6 +40,5 @@ export default function AdditionalInfo() {
         <p>Supported formats: PDF, JPG, PNG (Max 10MB)</p>
       </div>
     </div>
-      </div>
   );
 }

@@ -33,10 +33,10 @@ export const Card = () => {
       console.log("connected", socket.id);
     });
 
-    socket.on("totalPatient", (appointment) => {
-      console.log("got data from backend", appointment);
+    socket.on("totalPatient", (totalappointment) => {
+      console.log("got data from backend", totalappointment);
       // setTotalPatient((pre)=>[...pre,appointment]);
-      setTotalPatient(appointment);
+      setTotalPatient(totalappointment);
     });
 
     // optional: clean up on unmount

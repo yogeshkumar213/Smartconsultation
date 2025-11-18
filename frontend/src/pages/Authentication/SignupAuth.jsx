@@ -20,16 +20,11 @@ import CloseIcon from "@mui/icons-material/Close";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import { useAuth } from "../../context/AuthContext.jsx";
-// import Link from "@mui/material/Link";
-// import Typography from "@mui/material/Typography";
+
 import { useState } from "react";
 import { useContext } from "react";
 
-// import { AuthContext } from "../context/AuthContext";
-// import { createTheme, ThemeProvider } from "@mui/material/styles";
-// import { setRef } from "@mui/material";
 
-// const defaultTheme = createTheme();
 
 export default function Authentication() {
   const [FormState, setFormState] = useState(0);

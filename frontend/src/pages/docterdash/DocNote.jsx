@@ -9,13 +9,46 @@ import DialogTitle from "@mui/material/DialogTitle";
 // import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
 import EditDocumentIcon from "@mui/icons-material/EditDocument";
 import { useState } from "react";
+import { useEffect } from "react";
+import { PatientCollectionContext } from "../../context/DocterAuthContext";
+import { docterContext } from "../../context/DocterAuthContext.jsx";
+import { useContext } from "react";
+import { useSnackbar } from "../../context/Snakbarr.jsx";
 
-export const DocNote = ({ notes, setNotes }) => {
+export const DocNote = ({ notes, setNotes, consultationInputId }) => {
   const [open, setOpen] = React.useState(false);
   const [docMessage, setDocMessage] = useState("allergies");
   const [editopt, setEditopt] = useState(false);
   const [msgStore, setmsgStore] = useState("");
+  // const [showdetails,setshowdetails]=useState(false);
+  const { docterAPI } = useContext(docterContext);
+  const { consultedInput, setConsultedInput } = useContext(
+    PatientCollectionContext
+  );
+  const { showSnakbar } = useSnackbar();
+  const consultationinfo = [
+    "Symtoms",
+    "Probable Cause",
+    "Prescribed Medications",
+    "Treatment Advice",
+    "FollowUp Suggestions",
+  ];
+  const [formData, setFormData] = useState({
+    _id: "",
+    Symtoms: "",
+    ProbableCause: "",
+    PrescribedMedications: "",
+    TreatmentAdvice: "",
+    FollowUpSuggestions: "",
+  });
 
+  const allValueReq =
+    formData._id &&
+    formData.Symtoms &&
+    formData.ProbableCause &&
+    formData.PrescribedMedications &&
+    formData.TreatmentAdvice &&
+    formData.FollowUpSuggestions;
   //   const handleClickOpen = () => {
   //     setOpen(true);
   //   };
@@ -24,16 +57,95 @@ export const DocNote = ({ notes, setNotes }) => {
     console.log("button clicked");
     setEditopt(true);
   };
-  const handleAddSymtoms = () => {
-    console.log(docMessage);
-    setDocMessage(docMessage);
 
-    setEditopt(false);
+  useEffect(() => {
+    setFormData((prev) => {
+      return {
+        ...prev,
+        _id: consultationInputId,
+      };
+    });
+  }, [consultationInputId]);
+
+  const handleAddSymtoms = async () => {
+    // console.log(docMessage);
+    if (allValueReq) {
+      console.log(formData);
+      console.log("symtoms successfully added");
+      try {
+        const submitSymtoms = await docterAPI.post(
+          "/docter-dashboard/savesymtoms",
+          formData
+        );
+        console.log(submitSymtoms);
+
+        // setFormData((prev) => {
+        //   const cleared = {};
+        //   for (let key in prev) {
+        //     cleared[key] = "";
+        //   }
+        //   return cleared;
+        // });
+        showSnakbar(submitSymtoms.data.message);
+        setConsultedInput(submitSymtoms.data.saveToDB);
+        setEditopt(false);
+        // setshowdetails(true);
+      } catch (err) {
+        console.log(err);
+        showSnakbar(err);
+      }
+    } else {
+      console.log(formData);
+      showSnakbar("all fields are required ");
+    }
+
+    // setDocMessage(docMessage);
   };
   const handleClose = () => {
     setNotes(false);
   };
-  // const handleDocNote = (e) => {
+  const handleconsultaion = (symtom, e) => {
+    // console.log(symtom, `${e.target.value}`);
+
+    const fieldName = symtom.replace(/\s+/g, "");
+    setFormData((prev) => {
+      return {
+        ...prev,
+        [fieldName]: e.target.value,
+      };
+    });
+  };
+  useEffect(() => {
+    if (!consultationInputId) return;
+    try {
+      const getconsultedInput = async () => {
+        console.log(consultationInputId);
+        const result = await docterAPI.get(
+          `./docter-dashboard/getconsultedInput/${consultationInputId}`
+        );
+        console.log("API result", result);
+        setConsultedInput(result.data.ConsultedInput);
+        return result;
+      };
+      getconsultedInput();
+    } catch (err) {
+      console.log(err);
+    }
+  }, [consultationInputId]);
+
+  useEffect(() => {
+    if (consultedInput)
+      setFormData((prev) => {
+        return {
+          ...prev,
+          ...consultedInput,
+        };
+      });
+  }, [consultedInput]);
+
+  // const matchkey1 = Object.keys(consultedInput);
+  // const matchkey = consultationinfo.find((el) => el == matchkey1);
+  // const haconsndleDocNote = (e) => {
   //   console.log("editbutton clicked");
   //   e.preventDefault();
   // };
@@ -50,27 +162,47 @@ export const DocNote = ({ notes, setNotes }) => {
 
           {editopt ? (
             <div style={{ margin: "1rem" }}>
-              <textarea
-                // type="text"
-                id="symtoms"
-                rows={7}
-                value={docMessage}
-                onChange={(e) => setDocMessage(e.target.value)}
-                //   cols={2}
-                placeholder="Write your message here..."
-                style={{
-                  width: "100%",
-                  color: "#333",
-                  fontSize: "1rem",
-                  // textSizeAdjust:"1rem",
-                  border: "1px solid #1a73e8",
-                  borderRadius: "1rem",
-                  marginTop: "1rem",
-                  padding: "1rem",
-                  backgroundColor: "white",
-                }}
-                //    className="customPlaceholder"
-              ></textarea>
+              <div>
+                {consultationinfo.map((symtom, index) => {
+                  let placeholdertext = "";
+                  if (symtom == "Symtoms") {
+                    placeholdertext = "e.g., headache, nausea, dizziness...";
+                  } else if (symtom == "Probable Cause") {
+                    placeholdertext =
+                      "e.g., suspected viral infection, stress-induced...";
+                  } else if (symtom == "Treatment Advice") {
+                    placeholdertext =
+                      "e.g., Rest for 3 days, hydrate well, re-evaluate if symptoms persist...";
+                  } else if (symtom == "FollowUp Suggestions") {
+                    placeholdertext =
+                      "e.g., Revisit in 7 days or if fever persists...";
+                  } else if (symtom == "Prescribed Medications") {
+                    placeholdertext =
+                      "e.g., Paracetamol 500mg twice daily, Amoxicillin 250mg for 5 days";
+                  }
+                  const cleanedKey = symtom.replace(/\s+/g, "");
+                  return (
+                    <div key={symtom}>
+                      <p>
+                        <b>{symtom}</b>
+                      </p>
+                      <textarea
+                        placeholder={placeholdertext}
+                        rows={3}
+                        onChange={(e) => handleconsultaion(symtom, e)}
+                        value={formData[cleanedKey] || ""}
+                        style={{
+                          width: "100%",
+                          backgroundColor: "white",
+                          borderRadius: "1rem",
+                          color: "black",
+                          padding: "0.3rem",
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
               <Button
                 variant="contained"
                 color="success"
@@ -81,19 +213,25 @@ export const DocNote = ({ notes, setNotes }) => {
             </div>
           ) : (
             <div>
-              <textarea
-                rows={8}
-                disabled
-                value={docMessage}
-                style={{
-                  backgroundColor: "white",       
-                  width: "100%",
-                  borderRadius: "1rem",
-                  padding: "1rem",
-                  cursor: "default",
-                  color: "black",
-                }}
-              ></textarea>
+              {consultationinfo.map((el) => {
+                const fieldwithoutSpaces = el.replace(/\s+/g, "");
+
+                // console.log("el:", el, "→", formData[fieldwithoutSpaces]);
+                return (
+                  <div key={fieldwithoutSpaces}>
+                    <p>
+                      {el}:&nbsp;&nbsp;
+                      <b>
+                        {formData?.[fieldwithoutSpaces] !== ""
+                          ? formData[fieldwithoutSpaces]
+                          : consultedInput?.[fieldwithoutSpaces] || ""}
+                      </b>
+                    </p>
+                    <br></br>
+                  </div>
+                );
+              })}
+
               <Button
                 onClick={(e) => handleEdit(e)}
                 variant="contained"

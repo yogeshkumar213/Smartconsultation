@@ -21,7 +21,7 @@ export default function BasicDateCalendar() {
   const { showSnakbar } = useSnackbar();
 
   const appointmenthandler = () => {
-    console.log(formData);
+    console.log("formData",formData);
     // try {
     if (
       formData.Patient &&
@@ -30,7 +30,7 @@ export default function BasicDateCalendar() {
       formData.Time &&
       formData.PatientAudio
     ) {
-      console.log("all value are set");
+      console.log("all value are set",formData);
 
       setAppointmentController(true);
       // showSnakbar("Appointment Booked");
