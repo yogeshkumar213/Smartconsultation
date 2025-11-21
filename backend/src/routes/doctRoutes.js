@@ -12,6 +12,9 @@ import { io } from "../../app.js";
 
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { appointment } from "../controllers/userdashreq.js";
+import { TextractClient, ListAdaptersCommand, DetectDocumentTextCommand } from "@aws-sdk/client-textract";
+import { get } from "http";
 dotenv.config();
 
 
@@ -94,9 +97,216 @@ export const docterRoutes = (io) => {
     //     }
     // });
 
+    router.post("/uploadReport", async (req, res) => {
+        const { appointmentData, files } = req.body;
+        const { _id } = appointmentData;
+        console.log("appointmentId,files", appointmentData, files);
+        if (!_id) {
+            res.status(404).json({ message: "appointment Id not found" });
+        }
+        try {
+            const patient = await User.findOne({ _id: Patient });
+            console.log("patient", patient);
+            // const config1 = {
+            //     region: process.env.AWS_REGION,
+            //     credentials: {
+            //         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            //         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+            //     },
+            // }
+            // const client = new S3Client(config1);
+            // const ext = mime.extension(file.mimetype);
+            // const keyId = `${file.filename}.${ext}`
+
+            // const input = {
+
+            //     Bucket: "patientsensitivedata",
+            //     Body: patientFileStream,
+            //     Key: keyId,
+            //     ContentType: file.mimetype
+            // };
+            // await client.send(new PutObjectCommand(input));
 
 
+            // const UploadFilesInAws =
+            // const findAppointment = await Appointment.findOneAndUpdate({ _id: _id }, { $push: { ConsultationNotes: { UploadedReport: files } } }, { new: true });
+            // console.log("findAppointment", findAppointment);
+            // res.status(200).json({ message: "files uploaded successfully", findAppointment, patient });
+
+
+        }
+        catch (err) {
+            console.log(err);
+        }
+    })
+    router.post("/markAppointmentComp", async (req, res) => {
+        const { currPatientDocument, PatientAudio, PatientFile } = req.body;
+        const appointmentId = currPatientDocument.appointmentData._id;
+        console.log("currPatientDocument", req.body);
+        if (!appointmentId) {
+            return res.status(400).json({ message: "Appointment ID is required" });
+        }
+
+        try {
+            const markAppointmentComp = await Appointment.findOneAndUpdate({ _id: appointmentId }, { $set: { isCompleted: true } }, { new: true });
+            console.log("markAppointmentComp", markAppointmentComp);
+            if (markAppointmentComp) {
+                res.status(200).json({ message: "Appointment marked as completed successfully" });
+            }
+            else {
+                res.status(404).json({ message: "Appointment not found" });
+            }
+
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({ message: "internal server error" });
+        }
+
+
+    }
+
+    )
+    router.post("/getaudioandReportanalysis", async (req, res) => {
+        console.log("getnextpatient called");
+        // console.log("getnextpatient called with req:", req.body.nextPatientDetails);
+        const { audioAndReport } = req.body.nextPatientDetails;
+        // console.log("req.body.nextPatientDetails", req.body.nextPatientDetails);
+        const audio = audioAndReport[0].audio;
+        const report = audioAndReport[0].report;
+        const key = audioAndReport[0].report[0].key;
+        console.log("audio and report", audio, report);
+        try {
+            const fileResponse = await axios.get(audio.signedUrl, { responseType: "arraybuffer" });
+            const res1 = fileResponse.data;
+
+            const input = {
+                audio: [...new Uint8Array(res1)],
+            };
+            const cfResponse = await axios.post(
+                "https://api.cloudflare.com/client/v4/accounts/0f18dad60774e20250bb3b0482f18e52/ai/run/@cf/openai/whisper",
+                input,
+
+                {
+                    headers: {
+                        "Authorization": "Bearer POEFWBmbCQW-Oq5dbbuitlVgmpcJkh_XjM41JGx2",
+                        "Content-Type": "application/json"
+                    }
+                }
+                // correct format
+            );
+            console.log("Whisper response:", cfResponse.data.result.text);
+            const audtioTranscript = cfResponse.data.result.text;
+            console.log("Reportkey", key);
+            const TEXTRACT_CLIENT = new TextractClient({ region: process.env.AWS_REGION });
+            const params = {
+                Document: {
+                    S3Object: {
+                        Bucket: "patientsensitivedata",
+                        Name: key
+
+                    }
+                }
+            }
+
+            const command = new DetectDocumentTextCommand(params);
+            const data = await TEXTRACT_CLIENT.send(command);
+            // console.log("data", data);
+            let extractedText = "";
+            if (data.Blocks) {
+                extractedText = data.Blocks.filter(blocks => blocks.BlockType === 'LINE').map(block => block.Text).join('\n');
+
+            }
+            console.log("clean extracted Reports", extractedText);
+            const userPrompt = `
+        Analyze the following patient's condition by cross-referencing the self-reported symptoms and the official medical report.
+
+          1.  **Patient Symptoms (Audio Transcript):**
+        ---
+        ${audtioTranscript}
+        ---
+
+      2.  **Medical Findings (Report Text):**
+       ---
+       ${extractedText}
+      ---
+
+         Please provide a structured, simple summary in Hinglish that compares the patient's complaint with the report's diagnosis/finding.
+        `;
+            const messages = [
+                {
+                    "role": "system",
+                    "content": "You are a safe medical assistant.\nDo NOT diagnose. Give only general health information based on the provided report and symptoms.\nYour primary task is to **synthesize** the patient's self-reported symptoms (Audio Transcript) with the clinical findings (Report Text).\nAlways include red flags and when to see a doctor.\n\nIMPORTANT STYLE RULES:\n- Reply directly to the user's message.\n- NO greetings. NO introductions. NO disclaimers unless medically needed.\n- Keep the answer short and in simple Hinglish.\n- **Use markdown bullet points or numbered lists for all symptoms, causes, or lists of information.**\n- **Use **bold text** for important health values aur jab turant doctor se milne ki salah deni ho.**\n"
+                },
+
+                {
+                    "role": "user",
+                    "content": userPrompt
+                },
+            ];
+
+
+            const llmaResponse = await axios.post("https://api.cloudflare.com/client/v4/accounts/0f18dad60774e20250bb3b0482f18e52/ai/run/@cf/meta/llama-3.1-70b-instruct",
+                { messages },
+                {
+                    headers: {
+                        "Authorization": "Bearer POEFWBmbCQW-Oq5dbbuitlVgmpcJkh_XjM41JGx2",
+                        "Content-Type": "application/json"
+                    }
+                }
+
+            );
+            console.log("analysis report Data", llmaResponse.data.result);
+            res.status(200).json({ messages: "successfully fetched audio and report analysis", Analysdata: llmaResponse.data.result?.response?.trim(), TranscriptData: cfResponse.data.result.text });
+
+        } catch (err) {
+            console.error(err.response?.data || err.message);
+            res.status(500).json({ error: err.response?.data || err.message });
+            return;
+        }
+
+
+
+
+        // const { audioAndReport: audioAndReport = [], user } = req.body.nextPatientDetails;
+        // if (!audioAndReport || !Array.isArray(audioAndReport)) {
+        //     return res.status(400).json({ message: "Invalid audioAndReport data" });
+        // }
+        // const currAppoinment = [];
+        // const pastAppoinments = [];
+        // const findcurrentAppointmentAndPastAppointment = await Promise.all(audioAndReport.map(async (appointment) => {
+        //     const appoint = await Appointment.findOne({ _id: appointment.appointmentId });
+        //     if (appoint.isCompleted === false) {
+        //         currAppoinment.push({
+        //             Date: appoint.Date,
+        //             appointmentId: appoint._id,
+        //             audioData: appointment.audioData,
+        //             reportData: appointment.reportData,
+        //             isCompleted: appoint.isCompleted
+        //         })
+        //     }
+        //     else {
+        //         pastAppoinments.push({
+        //             Date: appoint.Date,
+        //             appointmentId: appoint._id,
+        //             audioData: appointment.audioData,
+        //             reportData: appointment.reportData,
+        //             isCompleted: appoint.isCompleted
+
+        //         })
+        //     }
+        // }))
+        // console.log("currAppoinment", currAppoinment);
+        // console.log("pastAppoinments", pastAppoinments);
+
+
+
+
+    });
     router.post("/getnextpatient", async (req, res) => {
+        console.log("getnextpatient called", req.body);
+
+
+
         const { Patient, PatientAudio, PatientFile } = req.body.nextPatient;
         console.log("Patient,PatientAudio,PatientFile", Patient, PatientAudio, PatientFile);
         const findUser = await User.findOne({ _id: Patient });
@@ -107,42 +317,34 @@ export const docterRoutes = (io) => {
         }
         console.log("findUser", findUser);
         // in future change this because searching past data on the basis of name is not a good way 
-        const findAllPrevData = await Appointment.find({ Patient: findUser._id });
+
+        try {
+
+            const audio = await getAudioandReport(PatientAudio);
+            const getReport = await Promise.all(PatientFile.map(async (prev) => {
+                const report = await getAudioandReport(prev);
+                return {
+                    report: report,
+                    key: prev.key
+                };
+
+
+            }));
+            console.log("files and audio", getReport, audio);
 
 
 
-        if (findAllPrevData) {
-            try {
-
-                const prevReportAndDataPromises = findAllPrevData.map(async (prev) => {
-
-                    if (!prev.PatientAudio || !prev.PatientFile) {
-                        return null; // Skip if data is missing
-                    }
-                    const { PatientAudio, PatientFile } = prev;
-
-                    const audio = await getAudioandReport(prev.PatientAudio);
-                    const report = await getAudioandReport(prev.PatientFile[0]);
-                    return {
-                        appointmentId: prev._id,
-                        date: prev.Date, // Include useful metadata
-                        audioData: audio,
-                        reportData: report
-                    };
-
-                })
-
-                const prevReportAndData = await Promise.all(prevReportAndDataPromises);
-                res.status(200).json({ message: "data successfully fetched", nextUser:findUser, prevAndCurrReportAndAudioData: prevReportAndData.filter((prev) => prev !== null) });
-            }
-            catch (err) {
-                console.log(err);
-                res.status(404).json({ message: "data was not found", err });
-            }
+            res.status(200).json({ message: "data successfully fetched", nextUser: findUser, audio: audio, report: getReport });
         }
-
-
+        catch (err) {
+            console.log(err);
+            res.status(404).json({ message: "data was not found", err });
+        }
     })
+
+
+
+
 
     router.post("/smart", async (req, res) => {
         const { audioSignedUrl, selectedOpt
@@ -446,14 +648,17 @@ export const docterRoutes = (io) => {
         console.log("docterid:", req.docterId);
         try {
             const Collection = await Appointment.find({ Docter: req.docterId });
-            const totalAppointment = Collection.length;
+            console.log(Collection.length);
+            const activeAppointments = Collection.filter(appointment => !appointment.isCompleted);
+
+            const totalAppointment = activeAppointments.length;
             // console.log(Collection);
             // console.log(totalAppointment);
             // await Appointment.countDocuments({Docter:req.docterId});
 
             console.log("totalAppointment", totalAppointment);
             console.log("totalcollection", Collection);
-            return res.status(200).json({ totalAppointment, Collection })
+            return res.status(200).json({ totalAppointment, Collection: activeAppointments });//only active appointments
         }
         catch (err) {
             return res.status(500).json({ message: "docter not found" })

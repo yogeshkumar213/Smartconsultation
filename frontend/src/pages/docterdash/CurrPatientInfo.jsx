@@ -3,7 +3,7 @@ import "./AppointmentList.css";
 import Button from "@mui/material/Button";
 import { DocNote } from "./DocNote";
 import { useState } from "react";
-import { CurrPatientDetails} from "./CurrPatientDeltails";
+import { CurrPatientDetails } from "./CurrPatientDeltails";
 import { PatientCollectionContext } from "../../context/DocterAuthContext";
 import { useContext } from "react";
 import { useEffect } from "react";
@@ -16,6 +16,7 @@ export default function CurrentPatient() {
   const { docterAPI } = useContext(docterContext);
   const [patientcollectioninfo, setPatientCollectionInfo] = useState([]);
   const [singlepatient, setSinglePatient] = useState();
+  const [loading, setLoading] = useState(false);
 
   const {
     patientcollection,
@@ -23,15 +24,33 @@ export default function CurrentPatient() {
     currPatientDocument,
     setCurrPatientDocument,
     currno,
-    setCurrNo
+    setCurrNo,
   } = useContext(PatientCollectionContext);
 
   console.log(patientcollection);
 
-  const nextPatient = () => {
-    console.log("patientClicked");
+  const nextPatient = async () => {
+    setLoading(true);
+    if (currPatientDocument) {
+      console.log("patientClicked");
 
-    setCurrNo((cur) => cur + 1);
+      setCurrNo((cur) => cur + 1);
+      try {
+        const markAppointmentComp = await docterAPI.post(
+          "/markAppointmentComp",
+          { currPatientDocument: currPatientDocument }
+        );
+        console.log(markAppointmentComp);
+        setLoading(false);
+      } catch (err) {
+        setLoading(false);
+        console.log(err);
+      }
+    } else {
+      console.log("no current patient");
+      alert("No current patient to mark as consulted");
+      return;
+    }
   };
   useEffect(() => {
     // setcurrPatient();
@@ -59,7 +78,7 @@ export default function CurrentPatient() {
           "patientcollectioninfo[currno]",
           patientcollectioninfo[currno]
         );
-        setSinglePatient(patientcollectioninfo[currno]);//patientcollectionifo ek detailed array hai ye wo array hai jisme particular doceter k sare patient hai
+        setSinglePatient(patientcollectioninfo[currno]); //patientcollectionifo ek detailed array hai ye wo array hai jisme particular doceter k sare patient hai
         const currUser = async () => {
           const fetchedFromAws = await docterAPI.post("/getpatientfile", {
             // note->patientcollection k ander mere wo patient ki list hai jinki field mai jo docter check kar rha hai uski id hai
@@ -92,9 +111,8 @@ export default function CurrentPatient() {
     setPatientLastVisit(true);
   };
 
-
   // console.log("patientcollection[currno]._id",patientcollection[currno]._id);
-  
+
   return (
     <div className="patient-Info">
       {typeof singlepatient == "undefined"
@@ -104,7 +122,7 @@ export default function CurrentPatient() {
         <CurrPatientDetails
           patientLastVisit={patientLastVisit}
           setPatientLastVisit={setPatientLastVisit}
-          currPatientDocument={currPatientDocument }         
+          currPatientDocument={currPatientDocument}
           consultationInputId={patientcollection[currno]._id}
         />
       )}
@@ -156,6 +174,7 @@ export default function CurrentPatient() {
         variant="contained"
         disableElevation
         fullWidth
+        disabled={loading}
         onClick={nextPatient}
         style={{ marginTop: "2rem" }}
       >

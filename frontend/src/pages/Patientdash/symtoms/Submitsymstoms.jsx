@@ -36,7 +36,20 @@ export const AudioRecorderComponent = () => {
 
   // handle file input
   const handleFileInput = (e) => {
-    console.log(e.target.files)
+    console.log(e.target.files);
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "application/pdf",
+    ];
+    console.log("Selected files:", e.target.files);
+    console.log("selected file type:",e.target.files[0].type);
+    const selectedFiles = e.target.files;
+    if (!allowedTypes.includes(selectedFiles[0].type)) {
+      alert("Only JPG, PNG,jpeg and PDF files are allowed.");
+      return;
+    }
     const file = Array.from(e.target.files); // Convert FileList to real array
     console.log(file);
     if (file) {
@@ -63,17 +76,16 @@ export const AudioRecorderComponent = () => {
     formData1.append("Time", formData.Time);
     if (formData.PatientFile) {
       console.log(formData.PatientFile);
-      formData.PatientFile.forEach((file)=>{
-      const allfiles = formData1.append("PatientFile",file);
-
-      })
+      formData.PatientFile.forEach((file) => {
+        const allfiles = formData1.append("PatientFile", file);
+      });
     }
     if (formData.PatientAudio) {
       formData1.append("PatientAudio", formData.PatientAudio);
     }
 
     try {
-      console.log("formData1",formData1.PatientFile);
+      console.log("formData1", formData1.PatientFile);
       const result = await client.post(
         "/appointment",
         formData1

@@ -3,10 +3,11 @@ import "../AppointmentList.css";
 import { useState } from "react";
 import "../AppointmentList.css";
 import { UploadFile } from "./UploadFile";
-import { docterContext } from "../../../context/DocterAuthContext";
+
+
 export default function AdditionalInfo() {
   const [File, setFile] = useState("");
-
+ 
 
   return (
     <div className="Additional-info">

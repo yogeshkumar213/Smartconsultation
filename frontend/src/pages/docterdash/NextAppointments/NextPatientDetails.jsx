@@ -2,11 +2,15 @@ import React, { useContext, useEffect, useState } from "react";
 
 import "../AppointmentList.css";
 import { HistoryReport } from "./HistoryReport";
+import Lottie from "lottie-react";
 import {
   docterContext,
   PatientCollectionContext,
 } from "../../../context/DocterAuthContext";
 
+import { margin, minWidth, width } from "@mui/system";
+import patientCompleted from "../../../../src/assets/patientcompleted.json";
+import DotLoader from "../../../../src/assets/Dotrecordinglightred.json";
 export default function NextPatientDetails({}) {
   const [open, setOpen] = useState(false);
   const { patientcollection, currno } = useContext(PatientCollectionContext);
@@ -36,7 +40,7 @@ export default function NextPatientDetails({}) {
             console.log(res);
             const result = res?.data;
             setNextPatientDetails({
-              audioAndReport: result.prevAndCurrReportAndAudioData,
+              audioAndReport: [{ audio: result.audio, report: result.report }],
               user: result.nextUser,
             });
           } catch (err) {
@@ -59,21 +63,56 @@ export default function NextPatientDetails({}) {
   const handleClick = () => {
     setOpen(true);
   };
+  const lottieStyle = {
+    height: 40,
+    width: 100,
+    marginLeft: 2,
+  };
   return (
     <div className="nextPatientDetails">
-      {setOpen && nextPatientDetails && (
-      
-          <HistoryReport
+      {open && nextPatientDetails?.user && (
+        <HistoryReport
+          open={open}
+          setOpen={setOpen}
          
-            open={open}
-            setOpen={setOpen}
-            nextPatientDetails={nextPatientDetails}
-          />
-      
+          nextPatientDetails={nextPatientDetails}
+        />
       )}
-      <div style={{ display: "flex" }}>
-        <h2>Appointments Details</h2>&nbsp;
-        <p>in-progress {nextPatientDetails == null ? "completed" : "Active"}</p>
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        <h2
+          style={{
+            display: "flex",
+            alignItems: "center",
+            margin: 0,
+          }}
+        >
+          Appointments Details
+        </h2>
+        &nbsp;
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            margin: 0,
+          }}
+        >
+          in-progress{" "}
+          {nextPatientDetails?.user ? (
+            <Lottie
+              animationData={DotLoader}
+              loop
+              autoplay
+              style={lottieStyle}
+            />
+          ) : (
+            <Lottie
+              animationData={patientCompleted}
+              loop
+              autoplay
+              style={lottieStyle}
+            />
+          )}
+        </span>
       </div>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         {/* <div style={{ display: "flex",marginRight:"1rem"}}>

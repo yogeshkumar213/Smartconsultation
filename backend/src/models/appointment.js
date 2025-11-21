@@ -20,10 +20,11 @@ const appointmentSchema = new mongoose.Schema({
         PrescribedMedications: String,
         TreatmentAdvice: String,
         FollowUpSuggestions: String,
-        createdAt:{
-            type:Date,
-            default:Date.now,
-             
+        UploadedReport: [String],
+        createdAt: {
+            type: Date,
+            default: Date.now,
+
         }
     },
     createdAt: {
@@ -44,6 +45,10 @@ const appointmentSchema = new mongoose.Schema({
         }],
         default: []
     },
+    isCompleted: {
+        type: Boolean,
+        default: false
+    }
 
 });
 const Appointment = mongoose.model('Appointment', appointmentSchema);
