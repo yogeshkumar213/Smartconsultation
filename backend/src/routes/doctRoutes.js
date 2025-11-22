@@ -9,12 +9,21 @@ import bcrypt from "bcrypt";
 import { verifyDocter } from "../controllers/mongoManeger.js";
 import { Appointment } from "../models/appointment.js";
 import { io } from "../../app.js";
+import mime from "mime-types";
 
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { appointment } from "../controllers/userdashreq.js";
 import { TextractClient, ListAdaptersCommand, DetectDocumentTextCommand } from "@aws-sdk/client-textract";
 import { get } from "http";
+import { Upload } from "@aws-sdk/lib-storage";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
+import { json } from "stream/consumers";
+import { type } from "os";
+
+
 dotenv.config();
 
 
@@ -25,6 +34,8 @@ dotenv.config();
 
 // })
 const router = express.Router();
+
+const upload = multer({ dest: 'uploads/' });
 
 const getAudioandReport = async (data) => {
     console.log("getAudioandReport called with req:", data);
@@ -97,48 +108,76 @@ export const docterRoutes = (io) => {
     //     }
     // });
 
-    router.post("/uploadReport", async (req, res) => {
-        const { appointmentData, files } = req.body;
-        const { _id } = appointmentData;
-        console.log("appointmentId,files", appointmentData, files);
-        if (!_id) {
-            res.status(404).json({ message: "appointment Id not found" });
+    router.post("/uploadReport", upload.array("docterAttachedFile", 4), (async (req, res) => {
+        console.log("uploadReport called with req:", req.body);
+        console.log("Uploaded files:", req.files);
+        const patientDocument = req.body.currPatientDocument;
+        let currDocument;
+        if (typeof patientDocument === 'string' && patientDocument.length > 0) {
+            try {
+                currDocument = JSON.parse(patientDocument);
+                console.log("currPatientDocument", currDocument);
+
+            }
+            catch (e) {
+                console.error("Failed to parse currPatientDocument JSON:", e);
+                return res.status(400).json({ message: "Invalid patient document format." });
+            }
         }
+
         try {
-            const patient = await User.findOne({ _id: Patient });
-            console.log("patient", patient);
-            // const config1 = {
-            //     region: process.env.AWS_REGION,
-            //     credentials: {
-            //         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            //         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-            //     },
-            // }
-            // const client = new S3Client(config1);
-            // const ext = mime.extension(file.mimetype);
-            // const keyId = `${file.filename}.${ext}`
+            const patientReportFiles = req.files;
+            const config1 = {
+                region: process.env.AWS_REGION,
+                credentials: {
+                    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                },
+            }
+            const client = new S3Client(config1);
 
-            // const input = {
+            let uploadedFiles = [];
+            uploadedFiles = await Promise.all(patientReportFiles.map(async (file) => {
+                const patientFileStream = fs.createReadStream(path.resolve(file.path));
+                const ext = mime.extension(file.mimetype);
+                const keyId = `${file.filename}.${ext}`
+                const input = {
+                    Bucket: "patientsensitivedata",
+                    Body: patientFileStream,
+                    Key: keyId,
+                    ContentType: file.mimetype
+                };
+                await client.send(new PutObjectCommand(input));
+                fs.unlink(file.path, (err) => {
+                    console.log("err deleting patientfiles", err)
+                })
 
-            //     Bucket: "patientsensitivedata",
-            //     Body: patientFileStream,
-            //     Key: keyId,
-            //     ContentType: file.mimetype
-            // };
-            // await client.send(new PutObjectCommand(input));
+                return {
+                    key: keyId,
+                    mimetype: file.mimetype
+                }
+            }))
+            console.log("uploadedFiles", uploadedFiles);
 
+            const storeFilesInDB = await Appointment.findOneAndUpdate({ _id: currDocument.appointmentData._id }, { $push: { 'ConsultationNotes.UploadedReport': { $each: uploadedFiles } } }, { new: true });
+            console.log("storeFilesInDB", storeFilesInDB);
+            const findUser = await User.findOne({
+                _id: currDocument.
+                    appointmentData
+                    .Patient
+            });
+            console.log("findUser", findUser);
 
-            // const UploadFilesInAws =
-            // const findAppointment = await Appointment.findOneAndUpdate({ _id: _id }, { $push: { ConsultationNotes: { UploadedReport: files } } }, { new: true });
-            // console.log("findAppointment", findAppointment);
-            // res.status(200).json({ message: "files uploaded successfully", findAppointment, patient });
+            res.status(200).json({ message: `${findUser.UserName} files uploaded successfully` }); //storeFilesInDB
 
-
-        }
-        catch (err) {
+        } catch (err) {
             console.log(err);
+            res.status(500).json({ message: "internal server error", err });
         }
-    })
+
+
+    }));
+
     router.post("/markAppointmentComp", async (req, res) => {
         const { currPatientDocument, PatientAudio, PatientFile } = req.body;
         const appointmentId = currPatientDocument.appointmentData._id;
@@ -147,11 +186,18 @@ export const docterRoutes = (io) => {
             return res.status(400).json({ message: "Appointment ID is required" });
         }
 
+        const updatedFields = {
+            isCompleted: true,
+            'ConsultationNotes.consultedAt': new Date()
+        }
         try {
-            const markAppointmentComp = await Appointment.findOneAndUpdate({ _id: appointmentId }, { $set: { isCompleted: true } }, { new: true });
+            const markAppointmentComp = await Appointment.findOneAndUpdate({ _id: appointmentId }, { $set: updatedFields }, { new: true });
             console.log("markAppointmentComp", markAppointmentComp);
             if (markAppointmentComp) {
+
+
                 res.status(200).json({ message: "Appointment marked as completed successfully" });
+                io.emit("totalConsultedPatients","updated count");
             }
             else {
                 res.status(404).json({ message: "Appointment not found" });
@@ -642,12 +688,46 @@ export const docterRoutes = (io) => {
         }
     })
 
+    router.get("/api/consultedPatients", verifyDocter, async (req, res) => {
+        console.log("docterid for consulted patients:", req.docterId);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const startOfDay = today;
+
+        const endOfDay = new Date(today);
+        endOfDay.setHours(23, 59, 59, 999);
+
+
+        try {
+            const todayConsultedAppointments = await Appointment.countDocuments({
+                isCompleted: false, 'ConsultationNotes.consultedAt': {
+                    $gte: startOfDay, $lte: endOfDay
+
+                }
+            })
+
+            console.log("todayConsultedAppointments", todayConsultedAppointments);
+            res.status(200).json({ message: "consulted patients fetched", todayConsultedAppointments });//only active appointments
+        }
+        catch (err) {
+            return res.status(500).json({ message: "docter not found" })
+        }
+    })
+
+
 
 
     router.get("/api/appointments", verifyDocter, async (req, res) => {
         console.log("docterid:", req.docterId);
+
+        const today = new Date();//day,date,year
+        today.setHours(0, 0, 0, 0);
+        const startOfDay = today;
+
+        const endOfDay = new Date(today);
+        endOfDay.setHours(23, 59, 59, 999);
         try {
-            const Collection = await Appointment.find({ Docter: req.docterId });
+            const Collection = await Appointment.find({ Docter: req.docterId, Date: { $gte: startOfDay, $lte: endOfDay } });
             console.log(Collection.length);
             const activeAppointments = Collection.filter(appointment => !appointment.isCompleted);
 
@@ -658,13 +738,14 @@ export const docterRoutes = (io) => {
 
             console.log("totalAppointment", totalAppointment);
             console.log("totalcollection", Collection);
+            io.emit("totalPatient", totalAppointment);
             return res.status(200).json({ totalAppointment, Collection: activeAppointments });//only active appointments
         }
         catch (err) {
             return res.status(500).json({ message: "docter not found" })
         }
 
-        io.emit("totalPatient", totalAppointment);
+
     });
     router.post("/getpatientdet", verifyDocter, async (req, res) => {
         const inputArray = req.body;

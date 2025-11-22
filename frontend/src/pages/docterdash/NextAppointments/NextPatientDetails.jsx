@@ -11,9 +11,10 @@ import {
 import { margin, minWidth, width } from "@mui/system";
 import patientCompleted from "../../../../src/assets/patientcompleted.json";
 import DotLoader from "../../../../src/assets/Dotrecordinglightred.json";
+
 export default function NextPatientDetails({}) {
   const [open, setOpen] = useState(false);
-  const { patientcollection, currno } = useContext(PatientCollectionContext);
+  const { patientcollection, currno , nextPatientDocument, setNextPatientDocument } = useContext(PatientCollectionContext);
 
   const { docterAPI } = useContext(docterContext);
 
@@ -31,6 +32,8 @@ export default function NextPatientDetails({}) {
       if (nextIndx < patientcollection.length) {
         const nextPatient = patientcollection[nextIndx];
         console.log("nextPatient", nextPatient);
+        setNextPatientDocument(nextPatient);
+        
 
         const nextPatientFunc = async () => {
           try {

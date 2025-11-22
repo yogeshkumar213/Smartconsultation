@@ -8,6 +8,7 @@ export const TotalPatientCollectionProvider = ({ children }) => {
   const [currno,setCurrNo]=useState(0);
   const [currPatientDocument, setCurrPatientDocument] = useState(null);
   const [consultedInput, setConsultedInput] = useState(null);
+  const [nextPatientDocument, setNextPatientDocument] = useState(null);
   return (
     <PatientCollectionContext.Provider
       value={{
@@ -18,6 +19,8 @@ export const TotalPatientCollectionProvider = ({ children }) => {
         currno,
         setCurrNo,
         consultedInput,
+        nextPatientDocument,
+        setNextPatientDocument,
         setConsultedInput,
       }}
     >

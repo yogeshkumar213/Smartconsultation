@@ -6,31 +6,50 @@ import { socket } from "./Socket/Socket.js";
 import { PatientCollectionContext } from "../../context/DocterAuthContext";
 import { Children } from "react";
 
-
-
 export const Card = () => {
   const { docterAPI } = useContext(docterContext);
   const [totalpatient, setTotalPatient] = useState(null);
- const {patientCollection,setPatientCollection}=useContext(PatientCollectionContext);
-
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const res = await docterAPI.get("/api/appointments");
-        const patientCollectionData = res.data.Collection;
-        setPatientCollection(patientCollectionData);
-
-        const totalPatientCount = res.data.totalAppointment;
-        setTotalPatient(totalPatientCount);
-        console.log(res);
-      } catch (err) {
-        console.log(err.data.err);
+  const { patientCollection, setPatientCollection, nextPatientDocument, setNextPatientDocument } = useContext(
+    PatientCollectionContext
+  );
+  const [totalConsultedPatients, setTotalConsultedPatients] = useState(null);
+  const fetchConsultedPatients = async () => {
+    try {
+      const res = await docterAPI.get("/api/consultedPatients");
+      console.log("Consulted Patients:", res.data);
+      if (res.status === 200) {
+        const consultedPatientsData = res.data.todayConsultedAppointments;
+        console.log("Today's Consulted Patients Data:", consultedPatientsData);
+        setTotalConsultedPatients(consultedPatientsData);
       }
-    };
+    } catch (err) {
+      console.log(err.data.err);
+    }
+  };
+
+  const fetchAppointments = async () => {
+    try {
+      const res = await docterAPI.get("/api/appointments");
+      const patientCollectionData = res.data.Collection;
+      setPatientCollection(patientCollectionData);
+
+      const totalPatientCount = res.data.totalAppointment;
+      setTotalPatient(totalPatientCount);
+      console.log(res);
+    } catch (err) {
+      console.log(err.data.err);
+    }
+  };
+  useEffect(() => {
     fetchAppointments();
+
+    fetchConsultedPatients();
 
     socket.on("connect", () => {
       console.log("connected", socket.id);
+    });
+    socket.on("totalConsultedPatients",()=>{
+      fetchConsultedPatients();
     });
 
     socket.on("totalPatient", (totalappointment) => {
@@ -41,7 +60,8 @@ export const Card = () => {
 
     // optional: clean up on unmount
     return () => {
-      socket.disconnect();
+      socket.off("totalConsultedPatients");
+      socket.off("totalPatient");
     };
   }, []);
 
@@ -73,8 +93,8 @@ export const Card = () => {
             <i className="fa-solid fa-check"></i>
           </span>
 
-          <h2>0</h2>
-          <p>No patient seen yet</p>
+          <h2>{totalConsultedPatients}</h2>
+          <p>{totalConsultedPatients === 0 ? "No patient seen yet" : ""}</p>
         </div>
 
         <div>
@@ -82,7 +102,7 @@ export const Card = () => {
             {" "}
             Next Appointment <i className="fa-regular fa-clock"></i>
           </span>
-          <h2>09:00 Am</h2>
+          <h2>{nextPatientDocument?.Time ?? "No next Appointment"}</h2>
           <p>7 patient waiting</p>
         </div>
       </div>

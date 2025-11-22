@@ -20,10 +20,13 @@ const appointmentSchema = new mongoose.Schema({
         PrescribedMedications: String,
         TreatmentAdvice: String,
         FollowUpSuggestions: String,
-        UploadedReport: [String],
-        createdAt: {
+        UploadedReport: [{
+            key: { type: String, required: true },
+            mimetype: { type: String, required: true }
+        }],
+        consultedAt: {
             type: Date,
-            default: Date.now,
+
 
         }
     },

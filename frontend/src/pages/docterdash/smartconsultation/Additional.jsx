@@ -6,7 +6,7 @@ import { UploadFile } from "./UploadFile";
 
 
 export default function AdditionalInfo() {
-  const [File, setFile] = useState("");
+  const [File, setFile] = useState(false);
  
 
   return (
