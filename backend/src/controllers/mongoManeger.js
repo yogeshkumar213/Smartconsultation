@@ -69,7 +69,7 @@ const isAuthenticated = ((req, res, next) => {
 const verifyDocter = (req, res, next) => {
     console.log("verifyDocter middleware called");
     const token = req.headers.doctoken;
-    console.log("doctoken", token);
+    // console.log("doctoken", token);
     if (!token) {
         return res.status(404).json({ message: "token not found" })
     }

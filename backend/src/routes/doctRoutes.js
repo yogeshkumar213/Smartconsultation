@@ -22,6 +22,7 @@ import fs from "fs";
 import path from "path";
 import { json } from "stream/consumers";
 import { type } from "os";
+import mongoose from "mongoose";
 
 
 dotenv.config();
@@ -197,7 +198,8 @@ export const docterRoutes = (io) => {
 
 
                 res.status(200).json({ message: "Appointment marked as completed successfully" });
-                io.emit("totalConsultedPatients","updated count");
+                io.emit("totalConsultedPatients", "updated count");
+                io.emit("totalWaitingPatient", "change waiting data");
             }
             else {
                 res.status(404).json({ message: "Appointment not found" });
@@ -690,24 +692,36 @@ export const docterRoutes = (io) => {
 
     router.get("/api/consultedPatients", verifyDocter, async (req, res) => {
         console.log("docterid for consulted patients:", req.docterId);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const startOfDay = today;
+        // const today = new Date();
+        // today.setHours(0, 0, 0, 0);
+        // const startOfDay = today;
 
-        const endOfDay = new Date(today);
-        endOfDay.setHours(23, 59, 59, 999);
-
+        // const endOfDay = new Date(today);
+        // endOfDay.setHours(23, 59, 59, 999);
+        const todayString = new Date().toISOString().split('T')[0];
 
         try {
-            const todayConsultedAppointments = await Appointment.countDocuments({
-                isCompleted: false, 'ConsultationNotes.consultedAt': {
-                    $gte: startOfDay, $lte: endOfDay
 
-                }
-            })
+            const Collection = await Appointment.aggregate([
+                {
+                    $match: {
+                        Docter: req.docterId,
+                        $expr: {
+                            $eq: [
+                                { $dateToString: { format: "%Y-%m-%d", date: "$Date", timezone: "Asia/Kolkata" } },
+                                todayString
+                            ]
+                        }
+                    }
+                },
+                { $project: { _id: 1, Patient: 1, Docter: 1, Date: 1, Time: 1, isCompleted: 1, ConsultationNotes: 1, PatientAudio: 1, PatientFile: 1, createdAt: 1 } }
+            ]);
+            const todayConsultedAppointments = Collection.filter(appointment => appointment.isCompleted);
+            const totalConsultedPatients = todayConsultedAppointments.length;
+            io.emit("totalConsultedPatients", totalConsultedPatients);
 
-            console.log("todayConsultedAppointments", todayConsultedAppointments);
-            res.status(200).json({ message: "consulted patients fetched", todayConsultedAppointments });//only active appointments
+            // console.log("todayConsultedAppointments", todayConsultedAppointments);
+            res.status(200).json({ message: "consulted patients fetched", totalConsultedPatients });//only active appointments
         }
         catch (err) {
             return res.status(500).json({ message: "docter not found" })
@@ -716,28 +730,95 @@ export const docterRoutes = (io) => {
 
 
 
+    router.post("/api/appointments/waiting", verifyDocter, async (req, res) => {
+        // console.log("docterid for waiting patients:", req.docterId);
+        console.log("req body for waiting patients:", req.body);
+        const currPatientAppointmentId = req.body.appointmentData._id;
+        console.log("currPatientAppointmentId", currPatientAppointmentId);
 
-    router.get("/api/appointments", verifyDocter, async (req, res) => {
-        console.log("docterid:", req.docterId);
+        // const today = new Date();//day,date,year
+        // today.setHours(0, 0, 0, 0);
 
-        const today = new Date();//day,date,year
-        today.setHours(0, 0, 0, 0);
-        const startOfDay = today;
+        // const startOfDay = today;
 
-        const endOfDay = new Date(today);
-        endOfDay.setHours(23, 59, 59, 999);
+        // const endOfDay = new Date(today);
+        // endOfDay.setHours(23, 59, 59, 999);
+
+        const todayString = new Date().toISOString().split('T')[0];
+        console.log("todayDate", todayString);
+        const excludedId=new mongoose.Types.ObjectId(currPatientAppointmentId);
+        console.log("excludedId",excludedId);
+
         try {
-            const Collection = await Appointment.find({ Docter: req.docterId, Date: { $gte: startOfDay, $lte: endOfDay } });
-            console.log(Collection.length);
+
+            const Collection = await Appointment.aggregate([
+                {
+                    $match: {
+                        Docter: req.docterId,
+
+                        $expr: {
+                            $eq: [
+                                { $dateToString: { format: "%Y-%m-%d", date: "$Date", timezone: "Asia/Kolkata" } },
+                                todayString
+                            ]
+                        }, _id: { $ne: excludedId }
+                    }
+                },
+                { $project: { _id: 1, Patient: 1, Docter: 1, Date: 1, Time: 1, isCompleted: 1, ConsultationNotes: 1, PatientAudio: 1, PatientFile: 1, createdAt: 1 } }
+            ]);
+            console.log("Collection", Collection);
+            const waitingAppointments = Collection.filter(appointment => !appointment.isCompleted);
+            console.log("waitingAppointment", waitingAppointments);
+            const totalWaitingAppointments = waitingAppointments.length;
+            console.log("totalWaitingAppointments",totalWaitingAppointments);
+          
+
+
+            res.status(200).json({ message: "waiting patients fetched", totalWaitingAppointments, waitingAppointments });//only active appointments
+        }
+        catch (err) {
+            console.log(err);
+            return res.status(500).json({ message: "docter not found", err })
+        }
+
+    })
+    router.get("/api/appointments", verifyDocter, async (req, res) => {
+        // console.log("docterid:", req.docterId);
+
+        // const today = new Date();//day,date,year
+        // today.setHours(0, 0, 0, 0);
+        // const startOfDay = today;
+
+        // const endOfDay = new Date(today);
+        // endOfDay.setHours(23, 59, 59, 999);
+        const todayString = new Date().toISOString().split('T')[0];
+        console.log("todayString", todayString);
+
+        try {
+
+            const Collection = await Appointment.aggregate([
+                {
+                    $match: {
+                        Docter: req.docterId,
+                        $expr: {
+                            $eq: [
+                                { $dateToString: { format: "%Y-%m-%d", date: "$Date", timezone: "Asia/Kolkata" } },
+                                todayString
+                            ]
+                        }
+                    }
+                },
+                { $project: { _id: 1, Patient: 1, Docter: 1, Date: 1, Time: 1, isCompleted: 1, ConsultationNotes: 1, PatientAudio: 1, PatientFile: 1, createdAt: 1 } }
+            ]);
             const activeAppointments = Collection.filter(appointment => !appointment.isCompleted);
 
-            const totalAppointment = activeAppointments.length;
-            // console.log(Collection);
-            // console.log(totalAppointment);
-            // await Appointment.countDocuments({Docter:req.docterId});
+            console.log("total active appointments today:", activeAppointments);
+            const totalAppointment = Collection.length;
 
-            console.log("totalAppointment", totalAppointment);
-            console.log("totalcollection", Collection);
+
+
+            // console.log("totalAppointment", totalAppointment);
+            // console.log("totalcollection", Collection);
             io.emit("totalPatient", totalAppointment);
             return res.status(200).json({ totalAppointment, Collection: activeAppointments });//only active appointments
         }

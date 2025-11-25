@@ -5,24 +5,47 @@ import axios from "axios";
 export const PatientCollectionContext = createContext();
 export const TotalPatientCollectionProvider = ({ children }) => {
   const [patientcollection, setPatientCollection] = useState([]);
-  const [currno,setCurrNo]=useState(0);
+  const [currno, setCurrNo] = useState(0);
   const [currPatientDocument, setCurrPatientDocument] = useState(null);
   const [consultedInput, setConsultedInput] = useState(null);
   const [nextPatientDocument, setNextPatientDocument] = useState(null);
+  const contextValue = React.useMemo(
+    () => ({
+      patientcollection,
+      currno,
+      currPatientDocument,
+      consultedInput,
+      nextPatientDocument,
+      setCurrNo,
+      setConsultedInput,
+      setCurrPatientDocument,
+      setPatientCollection,
+      setNextPatientDocument,
+    }),
+    [
+      patientcollection,
+      currno,
+      currPatientDocument,
+      consultedInput,
+      nextPatientDocument,
+    ]
+  );
+
   return (
     <PatientCollectionContext.Provider
-      value={{
-        patientcollection,
-        setPatientCollection,
-        currPatientDocument,
-        setCurrPatientDocument,
-        currno,
-        setCurrNo,
-        consultedInput,
-        nextPatientDocument,
-        setNextPatientDocument,
-        setConsultedInput,
-      }}
+      value={
+        contextValue
+        // patientcollection,
+        // setPatientCollection,
+        // currPatientDocument,
+        // setCurrPatientDocument,
+        // currno,
+        // setCurrNo,
+        // consultedInput,
+        // nextPatientDocument,
+        // setNextPatientDocument,
+        // setConsultedInput,
+      }
     >
       {children}
     </PatientCollectionContext.Provider>
