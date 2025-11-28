@@ -2,6 +2,23 @@ import React, { Children, useState } from "react";
 import { useContext, createContext } from "react";
 
 const PatientFormContext = createContext();
+export const UpComingAppointmentContext = createContext();
+export const UpComingAppointmentProvider = ({ children }) => {
+  const [appointmentFormData, setAppointmentFormData] = useState({
+    appointmentDate: "",
+    appointmentTime: "",
+    appointmentqueueNum: "",
+    appointDocter: "",
+    appointDocterSpecilization: "",
+  });
+  return (
+    <UpComingAppointmentContext.Provider
+      value={{ appointmentFormData, setAppointmentFormData }}
+    >
+      {children}
+    </UpComingAppointmentContext.Provider>
+  );
+};
 
 export const PatientFormProvider = ({ children }) => {
   const [appointmentController, setAppointmentController] = useState(false);

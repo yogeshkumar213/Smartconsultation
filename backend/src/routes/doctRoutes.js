@@ -23,6 +23,7 @@ import path from "path";
 import { json } from "stream/consumers";
 import { type } from "os";
 import mongoose from "mongoose";
+import { Counter } from "../models/counter.js";
 
 
 dotenv.config();
@@ -160,7 +161,7 @@ export const docterRoutes = (io) => {
             }))
             console.log("uploadedFiles", uploadedFiles);
 
-            const storeFilesInDB = await Appointment.findOneAndUpdate({ _id: currDocument.appointmentData._id }, { $push: { 'ConsultationNotes.UploadedReport': { $each: uploadedFiles } } }, { new: true });
+            const storeFilesInDB = await Appointment.findOneAndUpdate({ _id: currDocument }, { $push: { 'ConsultationNotes.UploadedReport': { $each: uploadedFiles } } }, { new: true });
             console.log("storeFilesInDB", storeFilesInDB);
             const findUser = await User.findOne({
                 _id: currDocument.
@@ -180,8 +181,8 @@ export const docterRoutes = (io) => {
     }));
 
     router.post("/markAppointmentComp", async (req, res) => {
-        const { currPatientDocument, PatientAudio, PatientFile } = req.body;
-        const appointmentId = currPatientDocument.appointmentData._id;
+        const { Docter, PatientAudio, PatientFile } = req.body.currPatientDocument;
+        const appointmentId = req.body.currPatientDocument._id;
         console.log("currPatientDocument", req.body);
         if (!appointmentId) {
             return res.status(400).json({ message: "Appointment ID is required" });
@@ -195,9 +196,9 @@ export const docterRoutes = (io) => {
             const markAppointmentComp = await Appointment.findOneAndUpdate({ _id: appointmentId }, { $set: updatedFields }, { new: true });
             console.log("markAppointmentComp", markAppointmentComp);
             if (markAppointmentComp) {
+                const nextPatientAppointment = await getcurQueue();
+                res.status(200).json({ message: "Appointment marked as completed successfully", nextPatientAppointment });
 
-
-                res.status(200).json({ message: "Appointment marked as completed successfully" });
                 io.emit("totalConsultedPatients", "updated count");
                 io.emit("totalWaitingPatient", "change waiting data");
             }
@@ -350,26 +351,38 @@ export const docterRoutes = (io) => {
 
 
     });
-    router.post("/getnextpatient", async (req, res) => {
-        console.log("getnextpatient called", req.body);
+    router.get("/getnextpatient", verifyDocter, async (req, res) => {
+        // console.log("getnextpatient called", req.body);
+        const { docterId } = req;
+        const getNextPatient = await getNextCurrQueue(docterId);
+        console.log("getnextpatient", getNextPatient);
+        if (!getNextPatient) {
+            // If getnextpatient is null, undefined, or an empty document (based on Mongoose behavior)
+            console.log("No uncompleted patients found for this doctor.");
 
-
-
-        const { Patient, PatientAudio, PatientFile } = req.body.nextPatient;
-        console.log("Patient,PatientAudio,PatientFile", Patient, PatientAudio, PatientFile);
-        const findUser = await User.findOne({ _id: Patient });
-
-        if (!findUser) {
-            // User not found, return 404
-            return res.status(404).json({ message: "Patient not found." });
+            // Respond to the client indicating the queue is empty
+            return res.status(200).json({
+                message: "Today's appointment queue is completed.",
+                nextPatientAppointment: null
+            });
         }
-        console.log("findUser", findUser);
+
+
+        // const { Patient, PatientAudio, PatientFile } = req.body.nextPatient;
+        // console.log("Patient,PatientAudio,PatientFile", Patient, PatientAudio, PatientFile);
+        // const findUser = await User.findOne({ _id: Patient });
+
+        // if (!findUser) {
+        //     // User not found, return 404
+        //     return res.status(404).json({ message: "Patient not found." });
+        // }
+        // console.log("findUser", findUser);
         // in future change this because searching past data on the basis of name is not a good way 
 
         try {
 
-            const audio = await getAudioandReport(PatientAudio);
-            const getReport = await Promise.all(PatientFile.map(async (prev) => {
+            const audio = await getAudioandReport(getNextPatient?.PatientAudio);
+            const getReport = await Promise.all(getNextPatient?.PatientFile.map(async (prev) => {
                 const report = await getAudioandReport(prev);
                 return {
                     report: report,
@@ -382,11 +395,11 @@ export const docterRoutes = (io) => {
 
 
 
-            res.status(200).json({ message: "data successfully fetched", nextUser: findUser, audio: audio, report: getReport });
+            res.status(200).json({ message: "data successfully fetched", nextUser: getNextPatient.Patient, audio: audio, report: getReport,extraDetails:getNextPatient});
         }
         catch (err) {
             console.log(err);
-            res.status(404).json({ message: "data was not found", err });
+            res.status(404).json({ message: "excessing the files from aws found err ", err });
         }
     })
 
@@ -718,7 +731,7 @@ export const docterRoutes = (io) => {
             ]);
             const todayConsultedAppointments = Collection.filter(appointment => appointment.isCompleted);
             const totalConsultedPatients = todayConsultedAppointments.length;
-            io.emit("totalConsultedPatients", totalConsultedPatients);
+            // io.emit("totalConsultedPatients", totalConsultedPatients);
 
             // console.log("todayConsultedAppointments", todayConsultedAppointments);
             res.status(200).json({ message: "consulted patients fetched", totalConsultedPatients });//only active appointments
@@ -733,7 +746,7 @@ export const docterRoutes = (io) => {
     router.post("/api/appointments/waiting", verifyDocter, async (req, res) => {
         // console.log("docterid for waiting patients:", req.docterId);
         console.log("req body for waiting patients:", req.body);
-        const currPatientAppointmentId = req.body.appointmentData._id;
+        const currPatientAppointmentId = req.body._id;
         console.log("currPatientAppointmentId", currPatientAppointmentId);
 
         // const today = new Date();//day,date,year
@@ -746,8 +759,8 @@ export const docterRoutes = (io) => {
 
         const todayString = new Date().toISOString().split('T')[0];
         console.log("todayDate", todayString);
-        const excludedId=new mongoose.Types.ObjectId(currPatientAppointmentId);
-        console.log("excludedId",excludedId);
+        const excludedId = new mongoose.Types.ObjectId(currPatientAppointmentId);
+        console.log("excludedId", excludedId);
 
         try {
 
@@ -770,8 +783,8 @@ export const docterRoutes = (io) => {
             const waitingAppointments = Collection.filter(appointment => !appointment.isCompleted);
             console.log("waitingAppointment", waitingAppointments);
             const totalWaitingAppointments = waitingAppointments.length;
-            console.log("totalWaitingAppointments",totalWaitingAppointments);
-          
+            console.log("totalWaitingAppointments", totalWaitingAppointments);
+
 
 
             res.status(200).json({ message: "waiting patients fetched", totalWaitingAppointments, waitingAppointments });//only active appointments
@@ -782,8 +795,24 @@ export const docterRoutes = (io) => {
         }
 
     })
+    const getcurQueue = async (docterid) => {
+        const queue = await Appointment.findOne({
+            Docter: new mongoose.Types.ObjectId(docterid),
+            isCompleted: false
+        }).sort({ QueueNum: 1 }).populate("Patient");
+        return queue;
+
+    }
+    const getNextCurrQueue = async (docterid) => {
+        const queue = await Appointment.findOne({
+            Docter: new mongoose.Types.ObjectId(docterid),
+            isCompleted: false,
+        }).sort({ QueueNum: 1 }).skip(1)
+            .populate(["Patient","Docter"]);
+        return queue;
+    }
     router.get("/api/appointments", verifyDocter, async (req, res) => {
-        // console.log("docterid:", req.docterId);
+        console.log("docterid:", req.docterId);
 
         // const today = new Date();//day,date,year
         // today.setHours(0, 0, 0, 0);
@@ -794,12 +823,14 @@ export const docterRoutes = (io) => {
         const todayString = new Date().toISOString().split('T')[0];
         console.log("todayString", todayString);
 
+
         try {
+            const doctorObjectId = new mongoose.Types.ObjectId(req.docterId);
 
             const Collection = await Appointment.aggregate([
                 {
                     $match: {
-                        Docter: req.docterId,
+                        Docter: doctorObjectId,
                         $expr: {
                             $eq: [
                                 { $dateToString: { format: "%Y-%m-%d", date: "$Date", timezone: "Asia/Kolkata" } },
@@ -812,17 +843,21 @@ export const docterRoutes = (io) => {
             ]);
             const activeAppointments = Collection.filter(appointment => !appointment.isCompleted);
 
-            console.log("total active appointments today:", activeAppointments);
+            // console.log("total active appointments today:", activeAppointments);
             const totalAppointment = Collection.length;
 
 
 
             // console.log("totalAppointment", totalAppointment);
-            // console.log("totalcollection", Collection);
+            console.log("totalcollection", Collection);
+            const getCurrPatient = await getcurQueue(req.docterId);
+            console.log("getCurrPatient", getCurrPatient);
             io.emit("totalPatient", totalAppointment);
-            return res.status(200).json({ totalAppointment, Collection: activeAppointments });//only active appointments
+
+            return res.status(200).json({ totalAppointment, currPatient: getCurrPatient });//only active appointments
         }
         catch (err) {
+            console.log("error abc", err);
             return res.status(500).json({ message: "docter not found" })
         }
 

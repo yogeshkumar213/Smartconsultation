@@ -14,20 +14,22 @@ export default function CurrentPatient() {
   const [patientLastVisit, setPatientLastVisit] = useState(false);
   // const [currno, setCurrNo] = useState(0);
   const { docterAPI } = useContext(docterContext);
-  const [patientcollectioninfo, setPatientCollectionInfo] = useState([]);
-  const [singlepatient, setSinglePatient] = useState();
+  // const [patientcollectioninfo, setPatientCollectionInfo] = useState([]);
+  // const [singlepatient, setSinglePatient] = useState();
   const [loading, setLoading] = useState(false);
 
   const {
-    patientcollection,
-    setPatientCollection,
+    // patientcollection,
+    // setPatientCollection,
+    currPatientFiles,
+    setCurrPatientFiles,
     currPatientDocument,
     setCurrPatientDocument,
     currno,
     setCurrNo,
   } = useContext(PatientCollectionContext);
 
-  console.log(patientcollection);
+  // console.log(patientcollection);
 
   const nextPatient = async () => {
     setLoading(true);
@@ -41,6 +43,7 @@ export default function CurrentPatient() {
           { currPatientDocument: currPatientDocument }
         );
         console.log(markAppointmentComp);
+        setCurrPatientDocument(markAppointmentComp.nextPatientAppointment);
         setLoading(false);
       } catch (err) {
         setLoading(false);
@@ -52,55 +55,70 @@ export default function CurrentPatient() {
       return;
     }
   };
-  useEffect(() => {
-    // setcurrPatient();
-    if (!patientcollection) return;
-    const fetchPatientData = async () => {
-      // console.log("currPatient", currPat);
-      try {
-        const res = await docterAPI.post("/getpatientdet", patientcollection);
-        console.log(res.data);
-        setPatientCollectionInfo(res.data.newArray);
-      } catch (err) {
-        console.error("Error fetching patient details", err);
-      }
-    };
-    fetchPatientData();
-  }, [patientcollection]);
+  // useEffect(() => {
+  //   // setcurrPatient();
+  //   if (!patientcollection) return;
+  //   const fetchPatientData = async () => {
+  //     // console.log("currPatient", currPat);
+  //     try {
+  //       const res = await docterAPI.post("/getpatientdet", patientcollection);
+  //       console.log(res.data);
+  //       setPatientCollectionInfo(res.data.newArray);
+  //     } catch (err) {
+  //       console.error("Error fetching patient details", err);
+  //     }
+  //   };
+  //   fetchPatientData();
+  // }, [patientcollection]);
 
-  useEffect(() => {
-    if (patientcollectioninfo.length > 0) {
-      console.log(patientcollectioninfo.length);
-      if (currno < patientcollectioninfo.length) {
-        console.log(patientcollection);
+  // useEffect(() => {
+  // if (patientcollectioninfo.length > 0) {
+  //   console.log(patientcollectioninfo.length);
+  // if (currno < patientcollectioninfo.length) {
+  //   console.log(patientcollection);
 
-        console.log(
-          "patientcollectioninfo[currno]",
-          patientcollectioninfo[currno]
-        );
-        setSinglePatient(patientcollectioninfo[currno]); //patientcollectionifo ek detailed array hai ye wo array hai jisme particular doceter k sare patient hai
-        const currUser = async () => {
-          const fetchedFromAws = await docterAPI.post("/getpatientfile", {
-            // note->patientcollection k ander mere wo patient ki list hai jinki field mai jo docter check kar rha hai uski id hai
-            // or patientcollection[currno]->maine us patientcollection[currno] mai se ek document utha liya or (patientcollection[currno].patientfile) ->us document mai se maine pateintfile and audio ki id utha li hai
-            patientfile: patientcollection[currno].PatientFile,
-            patientAudio1: patientcollection[currno].PatientAudio,
-          });
-          console.log(fetchedFromAws.data);
-          setCurrPatientDocument(fetchedFromAws.data); //currpatientDocument mai sirf mera currpatient hai uski purri document hai document mtlb single entity naa ki uski history
-        };
-        currUser();
-      } else {
-        setSinglePatient("Today Appointment completed");
-        setCurrPatientDocument(null);
-      }
-    }
-  }, [currno, patientcollectioninfo]);
+  //   console.log(
+  //     "patientcollectioninfo[currno]",
+  //     patientcollectioninfo[currno]
+  //   );
+  // setSinglePatient(patientcollectioninfo[currno]); //patientcollectionifo ek detailed array hai ye wo array hai jisme particular doceter k sare patient hai
+  // const currUser = async () => {
+  //   const fetchedFromAws = await docterAPI.post("/getpatientfile", {
+  //     // note->patientcollection k ander mere wo patient ki list hai jinki field mai jo docter check kar rha hai uski id hai
+  //     // or patientcollection[currno]->maine us patientcollection[currno] mai se ek document utha liya or (patientcollection[currno].patientfile) ->us document mai se maine pateintfile and audio ki id utha li hai
+  //     patientfile: patientcollection[currno].PatientFile,
+  //     patientAudio1: patientcollection[currno].PatientAudio,
+  //   });
+  //   console.log(fetchedFromAws.data);
+  //   setCurrPatientDocument(fetchedFromAws.data); //currpatientDocument mai sirf mera currpatient hai uski purri document hai document mtlb single entity naa ki uski history
+  // };
+  // currUser();
+  // } else {
+  //   setSinglePatient("Today Appointment completed");
+  //   setCurrPatientDocument(null);
+  // }
+  // }
+  // }, [currPatientDocument]);
   // , currPatient]
 
   useEffect(() => {
-    console.log("singlepatient", singlepatient);
-  }, [singlepatient]);
+    if (currPatientDocument) {
+      console.log("currPatientDocument", currPatientDocument);
+      const currUserFiles = async () => {
+        const fetchedFromAws = await docterAPI.post("/getpatientfile", {
+          patientfile: currPatientDocument.PatientFile,
+          patientAudio1: currPatientDocument.PatientAudio,
+        });
+        console.log(fetchedFromAws.data);
+        setCurrPatientFiles(fetchedFromAws.data);
+      };
+      currUserFiles();
+    }
+  }, [currPatientDocument]);
+
+  useEffect(() => {
+    console.log("currPatientDocument", currPatientDocument);
+  }, [currPatientDocument]);
 
   const noteHandler = (e) => {
     e.preventDefault();
@@ -115,22 +133,23 @@ export default function CurrentPatient() {
 
   return (
     <div className="patient-Info">
-      {typeof singlepatient == "undefined"
+      {typeof currPatientDocument == "undefined"
         ? "No patients assigned yet"
-        : typeof singlepatient}
-      {patientLastVisit && ( //currpatienthistory
-        <CurrPatientDetails
-          patientLastVisit={patientLastVisit}
-          setPatientLastVisit={setPatientLastVisit}
-          currPatientDocument={currPatientDocument}
-          consultationInputId={patientcollection[currno]._id}
-        />
-      )}
+        : typeof currPatientDocument}
+      {patientLastVisit &&
+        currPatientFiles && ( //currpatienthistory
+          <CurrPatientDetails
+            patientLastVisit={patientLastVisit}
+            setPatientLastVisit={setPatientLastVisit}
+            currPatientFiles={currPatientFiles}
+            consultationInputId={currPatientDocument._id}
+          />
+        )}
       {notes && (
         <DocNote
           notes={notes}
           setNotes={setNotes}
-          consultationInputId={patientcollection[currno]._id}
+          consultationInputId={currPatientDocument._id}
         />
       )}
       <div
@@ -157,8 +176,9 @@ export default function CurrentPatient() {
 
         <div>
           <h3>
-            {typeof singlepatient != "string" && singlepatient?.UserName
-              ? singlepatient.UserName
+            {typeof currPatientDocument != "string" &&
+            currPatientDocument?.Patient?.UserName
+              ? currPatientDocument.Patient.UserName
               : "No patients assigned yet"}
           </h3>
           <div

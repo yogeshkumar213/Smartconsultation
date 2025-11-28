@@ -22,7 +22,7 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 export const CurrPatientDetails = ({
   patientLastVisit,
   setPatientLastVisit,
-  currPatientDocument,
+  currPatientFiles,
   consultationInputId,
 }) => {
   const [open, setOpen] = React.useState(false);
@@ -45,7 +45,9 @@ export const CurrPatientDetails = ({
     setActiveTab(key);
   };
   console.log("consultationInputIdc", consultationInputId);
-  console.log("currPatientDocument", currPatientDocument);
+  useEffect(() => {
+    console.log("currPatientFiles", currPatientFiles);
+  }, [currPatientFiles]);
   //   };
   // console.log("currpatienthistory file and report ", currpatienthistory);
 
@@ -73,14 +75,14 @@ export const CurrPatientDetails = ({
 
   console.log("DEBUG: activeTab:", activeTab);
   console.log("DEBUG: patientLastVisit (dialog open):", patientLastVisit);
-  console.log("DEBUG: currPatientDocument:", currPatientDocument);
+  console.log("DEBUG: currPatientFiles:", currPatientFiles);
   console.log(
     "DEBUG: PatientFile is array?:",
-    Array.isArray(currPatientDocument?.PatientFile)
+    Array.isArray(currPatientFiles?.PatientFile)
   );
   console.log(
     "DEBUG: PatientFile length:",
-    currPatientDocument?.PatientFile?.length
+    currPatientFiles?.PatientFile?.length
   );
 
   return (
@@ -247,40 +249,41 @@ export const CurrPatientDetails = ({
 
               <p>Past Visits</p>
             </div>
-          ) : activeTab === "Report" && currPatientDocument?.PatientFile ? (
-            currPatientDocument.PatientFile.map((fileUrl, index) => {
+          ) : activeTab === "Report" && currPatientFiles?.PatientFile ? (
+            currPatientFiles.PatientFile.map((fileUrl, index) => {
               const { signedUrl, mimetype } = fileUrl;
               const ispdf = mimetype.endsWith(".pdf");
-              const isimg = [".png", ".jpg", ".jpeg"].some(ext => mimetype.endsWith(ext));
+              const isimg = [".png", ".jpg", ".jpeg"].some((ext) =>
+                mimetype.endsWith(ext)
+              );
               console.log("signed url for imag", signedUrl);
 
               return (
-                
-                  <div key={index} style={{ marginBottom: "2px" }}>
-                    {ispdf && (
-                      <iframe
-                        src={signedUrl}
-                        width="100%"
-                        height="100%"
-                        style={{ width: "100%" }}
-                      />
-                    )}
-                    {isimg && (
-                      <img
-                        src={signedUrl}
-                        alt="uploaded file"
-                        style={{
-                          width: "100%",
-                          // maxHeight: "500px",
-                          objectFit: "contain",
-                          margin: "0 0 2rem 0",
-                          borderRadius: "1rem",
-                        }}
-                        onClick={() => setSelectedImg(signedUrl)}
-                      />
-                    )}
+                <div key={index} style={{ marginBottom: "2px" }}>
+                  {ispdf && (
+                    <iframe
+                      src={signedUrl}
+                      width="100%"
+                      height="100%"
+                      style={{ width: "100%" }}
+                    />
+                  )}
+                  {isimg && (
+                    <img
+                      src={signedUrl}
+                      alt="uploaded file"
+                      style={{
+                        width: "100%",
+                        // maxHeight: "500px",
+                        objectFit: "contain",
+                        margin: "0 0 2rem 0",
+                        borderRadius: "1rem",
+                      }}
+                      onClick={() => setSelectedImg(signedUrl)}
+                    />
+                  )}
 
-                    {/* {selectedimg && (
+                  {/* {selectedimg && (
                       <div
                         onClick={() => setSelectedImg(null)}
                         style={{
@@ -308,8 +311,7 @@ export const CurrPatientDetails = ({
                         ></img>
                       </div>
                     )} */}
-                  </div>
-              
+                </div>
               );
             })
           ) : null}

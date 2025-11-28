@@ -16,6 +16,7 @@ const __dirname = path.dirname(__filename);
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 import dotenv from "dotenv";
+import { Counter } from "../models/counter.js";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 
@@ -122,8 +123,38 @@ const getuserprofile = async (req, res) => {
 
 
 }
+const getNextQueueNum = async (docterDepartment) => {
+    const counter = await Counter.findOneAndUpdate(
+        { _id: docterDepartment },
+        { $inc: { queueNumber: 1 } },// $inc prevent from race condition
+        { new: true, upsert: true }//upsert: true ka matlab: Agar document exists nahi karta → automatically create kar do.
+
+    )
+    return counter.queueNumber;
+}
+const getAllUpcomingAppointment = async (req, res) => {
+    try {
+        console.log("req", req.user);
+        const Patient = req.user.PatientId;
+
+        const appointments = await Appointment.find({ Patient, isCompleted: false }).populate("Docter");
+        const appointment = appointments.map((a) => ({
+            Docter: a.Docter.DocterName,
+            specilization: a.Docter.
+                Specilization,
+            queueNum: a.QueueNum,
+            Date: a.Date,
+            Time: a.Time
+        }));
+        res.status(200).json({ message: "Appointment Successfully Booked", appointment })
+    }
+    catch (err) {
+        console.log("facing an issue while fetching upcoming appointment", err);
+        res.status("500").json({ message: "facing an issue while fetching upcoming appointment", err })
+    }
 
 
+}
 const appointment = async (req, res) => {
     // const patientToken=req.headers.authorization.split(" ")[1];
 
@@ -140,19 +171,8 @@ const appointment = async (req, res) => {
     console.log("files are->", file);//image/png'
     console.log("PatientFile", PatientFile);
     // console.log(PatientAudio); //audio/wav
-
-
-
-
-
-    const { Patient, Docter, Date, Time } = req.body;
+    const { Patient, Docter: docterId, Date, Time } = req.body;
     console.log("Patient id is", Patient);
-
-
-
-
-
-
     const config1 = {
         region: process.env.AWS_REGION,
         credentials: {
@@ -162,8 +182,6 @@ const appointment = async (req, res) => {
     }
     const client = new S3Client(config1);
 
-    // async function uploadFileToS3(file, keyId, appointmentId) {
-    // const uploadFileToS3 = async (PatientFile, PatientAudio) => {
     try {
         if (!PatientAudio && !PatientFile) {
             return res.status(400).json({ message: "No files uploaded" })
@@ -172,7 +190,7 @@ const appointment = async (req, res) => {
         let uploadedFiles = [];
         let audioFileUrl = null;
         if (PatientFile && Array.isArray(PatientFile)) {
-            // const patientmulFiles = async () => {
+
 
             uploadedFiles = await Promise.all(  // // Wait for all uploads to finish
                 PatientFile.map(async (file) => {
@@ -229,6 +247,12 @@ const appointment = async (req, res) => {
             }
 
         }
+        const docter = await Docter.find({ _id: docterId });
+        const docterDepartment = docter[0].Specilization
+
+        const getQueueNum = await getNextQueueNum(docterDepartment);
+
+
         const saveInDb = new Appointment({
             Patient: req.body.Patient,
             Docter: req.body.Docter,
@@ -236,16 +260,28 @@ const appointment = async (req, res) => {
             Time: req.body.Time,
             PatientFile: uploadedFiles,
             PatientAudio: audioFileUrl,
+            QueueNum: getQueueNum,
+
 
         })
         const bookAppointment = await saveInDb.save();
 
         console.log(bookAppointment);
-        const totalAppointments = await Appointment.countDocuments({ Docter });
+        // const totalAppointments = await Appointment.countDocuments({ Docter });
 
-        io.emit("totalPatient", totalAppointments);
+        const appointments = await Appointment.find({ Patient, isCompleted: false }).populate("Docter");
+        const appointment = appointments.map((a) => ({
+            Docter: a.Docter.DocterName,
+            specilization: a.Docter.
+                Specilization,
+            queueNum: a.QueueNum,
+            Date: a.Date,
+            Time: a.Time
+        })
+        )
+        // io.emit("totalPatient", totalAppointments);
         if (bookAppointment) {
-            res.status(200).json({ message: "Appointment Successfully Booked" })
+            res.status(200).json({ message: "Appointment Successfully Booked", appointment })
         }
 
     }
@@ -255,12 +291,6 @@ const appointment = async (req, res) => {
     }
 
 }
-
-
-
-
-
-
 const getappointTime = async (req, res) => {
     try {
         console.log("request for time is came")
@@ -299,5 +329,5 @@ const getDocterList = async (req, res) => {
 
 
 
-export { appointment, getappointTime, getDocterList, getuserprofile, patdel, updateuserdata };
+export { appointment, getappointTime, getDocterList, getuserprofile, patdel, updateuserdata, getAllUpcomingAppointment };
 

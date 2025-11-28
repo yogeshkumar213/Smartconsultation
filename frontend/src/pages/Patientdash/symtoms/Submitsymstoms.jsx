@@ -6,11 +6,16 @@ import { useFormData } from "../../../context/PatientFormContext";
 import { Button } from "@mui/material";
 import { useSnackbar } from "../../../context/Snakbarr";
 import { useAuth } from "../../../context/AuthContext";
+import { UpComingAppointmentContext } from "../../../context/PatientFormContext";
+import { useContext } from "react";
 
 export const AudioRecorderComponent = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [check, setCheck] = useState(false);
   const fileInput = useRef(null);
+  const { appointmentFormData, setAppointmentFormData } = useContext(
+    UpComingAppointmentContext
+  );
 
   const {
     formData,
@@ -44,7 +49,7 @@ export const AudioRecorderComponent = () => {
       "application/pdf",
     ];
     console.log("Selected files:", e.target.files);
-    console.log("selected file type:",e.target.files[0].type);
+    console.log("selected file type:", e.target.files[0].type);
     const selectedFiles = e.target.files;
     if (!allowedTypes.includes(selectedFiles[0].type)) {
       alert("Only JPG, PNG,jpeg and PDF files are allowed.");
@@ -95,16 +100,10 @@ export const AudioRecorderComponent = () => {
       );
       console.log(result);
       showSnakbar("Appointment submitted successfully");
+      setAppointmentFormData(result?.data?.appointment);
+      
       // console.log("appointment booked");
-      setFormData((prev) => ({
-        ...prev,
-        Docter: "",
-        // Patient:"",
-        Date: null,
-        Time: "",
-        PatientAudio: null,
-        PatientFile: [],
-      }));
+
       setAppointmentController(false);
       // console.log("reset");
     } catch (err) {
@@ -115,6 +114,16 @@ export const AudioRecorderComponent = () => {
         console.error(err);
         showSnakbar("Something went wrong");
       }
+    } finally {
+      setFormData((prev) => ({
+        ...prev,
+        Docter: "",
+        // Patient:"",
+        Date: null,
+        Time: "",
+        PatientAudio: null,
+        PatientFile: [],
+      }));
     }
   };
 

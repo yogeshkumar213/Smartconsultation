@@ -11,8 +11,8 @@ export const Card = () => {
   const { docterAPI } = useContext(docterContext);
   const [totalpatient, setTotalPatient] = useState(null);
   const {
-    patientCollection,
-    setPatientCollection,
+    // patientCollection,
+    // setPatientCollection,
     nextPatientDocument,
     setNextPatientDocument,
     currPatientDocument,
@@ -34,14 +34,15 @@ export const Card = () => {
     } catch (err) {
       console.log(err.data.err);
     }
-  }, [docterAPI]);
+  }, []);
 
   const fetchAppointments = useCallback(async () => {
     try {
       const res = await docterAPI.get("/api/appointments");
-      const patientCollectionData = res.data.Collection;
+      const currPatientData = res.data.currPatient;
 
-      setPatientCollection(patientCollectionData);
+      // setPatientCollection(patientCollectionData);
+      setCurrPatientDocument(currPatientData)
 
       const totalPatientCount = res.data.totalAppointment;
 
@@ -51,7 +52,7 @@ export const Card = () => {
     } catch (err) {
       console.log(err.data);
     }
-  }, [docterAPI]);
+  }, []);
 
   const fetchTotalWatingPatients = useCallback(async () => {
     if (currPatientDocument) {
@@ -97,7 +98,7 @@ export const Card = () => {
       console.log("connected", socket.id);
     });
 
-    socket.on("totalConsultedPatients", handleConsultedEvent);
+    // socket.on("totalConsultedPatients", handleConsultedEvent);
 
     socket.on("totalPatient", handleTotalPatientEvent);
 

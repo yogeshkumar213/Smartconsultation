@@ -9,13 +9,14 @@ import { io } from "../../app.js";
 
 
 import { usersignup, doctersignup, userLogin, docterLogin, isAuthenticated, refreshAccessToken } from "../controllers/mongoManeger.js"
-import { getDocterList, getappointTime, appointment, getuserprofile, updateuserdata, patdel } from "../controllers/userdashreq.js";
+import { getDocterList, getappointTime, appointment, getuserprofile, updateuserdata, patdel,getAllUpcomingAppointment } from "../controllers/userdashreq.js";
 import { Appointment } from "../models/appointment.js";
 
 
 export const userRoutes = (io) => {
     const router = express.Router();
     router.post("/refresh",refreshAccessToken)
+    router.get("/getAllUpcomingAppointment",isAuthenticated,getAllUpcomingAppointment)
     router.delete("/pat/permdel", isAuthenticated, patdel);
     router.patch("/updatedata", isAuthenticated, updateuserdata);
     router.post("/appointment", isAuthenticated, upload.fields([

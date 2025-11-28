@@ -18,7 +18,7 @@ export default function InputSlider() {
   const [value, setValue] = React.useState(30);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [isprogress, setIsProgress] = React.useState(null);
-  const { currPatientDocument, setCurrPatientDocument } = useContext(
+  const { currPatientFiles, setCurrPatientFiles } = useContext(
     PatientCollectionContext
   );
 
@@ -70,15 +70,15 @@ export default function InputSlider() {
   }, [isPlaying]);
 
   useEffect(() => {
-    console.log(currPatientDocument);
-    if (currPatientDocument?.audioFile) {
-      audiRef.current = new Audio(currPatientDocument.audioFile.signedUrl);
+    console.log( currPatientFiles);
+    if (currPatientFiles?.audioFile) {
+      audiRef.current = new Audio( currPatientFiles.audioFile.signedUrl);
       console.log(audiRef.current);
       audiRef.current.onended = () => {
         setIsPlaying(false);
       };
     }
-  }, [currPatientDocument]);
+  }, [ currPatientFiles]);
 
   return (
     <Box className="playbutton-and-volume">

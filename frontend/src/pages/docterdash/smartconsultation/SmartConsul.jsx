@@ -21,9 +21,11 @@ export default function SmartConsul() {
   const {
     currPatientDocument,
     setCurrPatientDocument,
-    patientcollection,
-    setPatientCollection,
-    currno,setCurrno
+    currPatientFiles,
+    setCurrPatientFiles
+    // patientcollection,
+    // setPatientCollection,
+    // currno,setCurrno
   } = useContext(PatientCollectionContext);
 
   const [loading, setLoading] = useState(false);
@@ -35,7 +37,7 @@ export default function SmartConsul() {
   const handleSmartConsultationopt = async (e) => {
     console.log(e);
     setOption(e);
-    let currPatient = currPatientDocument.appointmentData._id;
+    let currPatient = currPatientDocument._id;
 
     if (
       smartConsultationCache[currPatient] &&
@@ -48,11 +50,11 @@ export default function SmartConsul() {
 
     try {
       setLoading(true);
-      if (!currPatientDocument?.audioFile?.signedUrl) {
+      if (!currPatientFiles?.audioFile?.signedUrl) {
         throw new Error("Audio file not found for current patient.");
       }
       const res = await docterAPI.post("/smart", {
-        audioSignedUrl: currPatientDocument.audioFile.signedUrl,
+        audioSignedUrl: currPatientFiles.audioFile.signedUrl,
         selectedOpt: e,
       });
       console.log(res);

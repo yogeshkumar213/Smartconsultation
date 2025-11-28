@@ -111,8 +111,6 @@ let usersignup = async (req, res) => {
 
         }
 
-
-
         let newPass = await bcrypt.hash(Password, 10);
 
         let data = await User.create({
@@ -122,10 +120,12 @@ let usersignup = async (req, res) => {
             Phoneno: Phoneno
 
         })
-        console.log(data);
+        console.log("user registered", data);
         const token = jwt.sign({
-            Email: Email,
-            UserName: UserName,
+            
+            Email: data.Email,
+            UserName: data.UserName,
+            PatientId:data._id
             // Password: Password
         }, process.env.SECRET_KEY, { expiresIn: "1h" });
         console.log(token);
@@ -158,29 +158,33 @@ let userLogin = async (req, res) => {
             console.log("Invalid password")
             return res.status(401).json({ message: "Invalid password" })
         }
+        if (isMatch && existUser) {
+            const token = jwt.sign({
+                Email: Email,
+                UserName: existUser.UserName,
+                PatientId:existUser._id
+            }, process.env.SECRET_KEY, { expiresIn: "1min" });
 
-        const token = jwt.sign({
-            Email: Email,
-            UserName: existUser.UserName,
-        }, process.env.SECRET_KEY, { expiresIn: "1min" });
-
-        console.log(token);
-        console.log("user found ");
-
-
-        const refreshToken = jwt.sign({
-            Email: Email
-        }, process.env.REFRESH_TOKEN_SECRET);
+            console.log(token);
+            console.log("user found ");
 
 
-        res.cookie("jwt", refreshToken, {
-            httpOnly: true,
-            sameSite: "Strict",
-            secure: false,
-            maxAge: 24 * 60 * 60 * 1000
-        })
+            const refreshToken = jwt.sign({
+                Email: Email
+            }, process.env.REFRESH_TOKEN_SECRET);
 
-        return res.status(200).json({ message: "user found", token, existUser })
+
+            res.cookie("jwt", refreshToken, {
+                httpOnly: true,
+                sameSite: "Strict",
+                secure: false,
+                maxAge: 24 * 60 * 60 * 1000
+            })
+
+            return res.status(200).json({ message: "user found", token, existUser })
+        }
+
+
     }
     catch (err) {
         console.log(err);
@@ -190,43 +194,43 @@ let userLogin = async (req, res) => {
 
 
 const refreshAccessToken = async (req, res) => {
-  console.log("refreshAccessToken called");
+    console.log("refreshAccessToken called");
 
-  const cookies = req.cookies;
-  if (!cookies?.jwt) {
-    return res.status(401).json({ message: "Refresh token not found" });
-  }
-
-  const refreshToken = cookies.jwt;
-
-  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, decoded) => {
-    if (err) {
-      console.error("JWT verification failed:", err);
-      return res.status(403).json({ message: "Invalid or expired refresh token" });
+    const cookies = req.cookies;
+    if (!cookies?.jwt) {
+        return res.status(401).json({ message: "Refresh token not found" });
     }
 
-    try {
-      const existUser = await User.findOne({ Email: decoded.Email });
+    const refreshToken = cookies.jwt;
 
-      if (!existUser) {
-        return res.status(403).json({ message: "User not found" });
-      }
+    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, decoded) => {
+        if (err) {
+            console.error("JWT verification failed:", err);
+            return res.status(403).json({ message: "Invalid or expired refresh token" });
+        }
 
-      const token = jwt.sign(
-        {
-          Email: existUser.Email,
-          UserName: existUser.UserName,
-        },
-        process.env.SECRET_KEY,
-        { expiresIn: "1h" }
-      );
+        try {
+            const existUser = await User.findOne({ Email: decoded.Email });
 
-      return res.status(200).json({ message: "Access token refreshed", token });
-    } catch (dbErr) {
-      console.error("Error fetching user:", dbErr);
-      return res.status(500).json({ message: "Server error during token refresh" });
-    }
-  });
+            if (!existUser) {
+                return res.status(403).json({ message: "User not found" });
+            }
+
+            const token = jwt.sign(
+                {
+                    Email: existUser.Email,
+                    UserName: existUser.UserName,
+                },
+                process.env.SECRET_KEY,
+                { expiresIn: "1h" }
+            );
+
+            return res.status(200).json({ message: "Access token refreshed", token });
+        } catch (dbErr) {
+            console.error("Error fetching user:", dbErr);
+            return res.status(500).json({ message: "Server error during token refresh" });
+        }
+    });
 };
 
 

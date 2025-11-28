@@ -52,8 +52,8 @@ export const UploadFile = () => {
       alert("No current patient document available for file upload.");
       return;
     }
-    const appointmentId = currPatientDocument.appointmentData?._id;
-    formData.append("currPatientDocument", JSON.stringify(currPatientDocument));
+    const appointmentId = currPatientDocument?._id;
+    formData.append("currPatientDocument", JSON.stringify(currPatientDocument._id));
 
     console.log("Uploading files for Appointment ID:", appointmentId);
     for (let i = 0; i < selectedFiles.length; i++) {

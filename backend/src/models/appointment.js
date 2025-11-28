@@ -5,7 +5,7 @@ const appointmentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, ref: 'User'
     },
     Docter: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,ref:'Docter'
     },
     Date: {
         type: Date,
@@ -33,6 +33,9 @@ const appointmentSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
+    },
+    QueueNum:{
+        type:Number
     },
     PatientAudio: {
         type: {

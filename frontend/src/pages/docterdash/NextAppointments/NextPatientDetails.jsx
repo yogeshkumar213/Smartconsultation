@@ -14,54 +14,62 @@ import DotLoader from "../../../../src/assets/Dotrecordinglightred.json";
 
 export default function NextPatientDetails({}) {
   const [open, setOpen] = useState(false);
-  const { patientcollection, currno , nextPatientDocument, setNextPatientDocument } = useContext(PatientCollectionContext);
+  const {
+    // patientcollection,
+    currno,
+    currPatientFiles,
+    setCurrPatientFiles,
+    nextPatientDocument,
+    setNextPatientDocument,
+  } = useContext(PatientCollectionContext);
 
   const { docterAPI } = useContext(docterContext);
 
   const [nextPatientDetails, setNextPatientDetails] = useState({
     audioAndReport: [],
     user: "",
+    otherDetails: "",
   });
   // console.log("patientcollection",patientcollection,currno);
   useEffect(() => {
-    console.log("patientcollection", patientcollection, currno);
-    if (patientcollection && currno != undefined) {
-      const nextIndx = currno + 1;
+    // console.log("patientcollection", patientcollection, currno);
+    // if (patientcollection && currno != undefined) {
+    // const nextIndx = currno + 1;
 
-      // CHECK: Is the calculated next index within the array's boundaries?
-      if (nextIndx < patientcollection.length) {
-        const nextPatient = patientcollection[nextIndx];
-        console.log("nextPatient", nextPatient);
-        setNextPatientDocument(nextPatient);
-        
+    // CHECK: Is the calculated next index within the array's boundaries?
+    // if (nextIndx < patientcollection.length) {
+    //   const nextPatient = patientcollection[nextIndx];
+    //   console.log("nextPatient", nextPatient);
+    //   setNextPatientDocument(nextPatient);
 
-        const nextPatientFunc = async () => {
-          try {
-            const res = await docterAPI.post("/getnextpatient", {
-              nextPatient,
-            });
-            console.log(res);
-            const result = res?.data;
-            setNextPatientDetails({
-              audioAndReport: [{ audio: result.audio, report: result.report }],
-              user: result.nextUser,
-            });
-          } catch (err) {
-            console.log(err);
-          }
-        };
-        nextPatientFunc();
-        // setNextPatient(nextPatient);
-      } else {
-        //jab last patient ho only
-        console.log("This is the last patient in the collection.");
-        setNextPatientDetails({
-          audioAndReport: [],
-          user: null,
+    const nextPatientFunc = async () => {
+      try {
+        const res = await docterAPI.get("/getnextpatient", {
+          // nextPatient,
         });
+        console.log(res);
+        const result = res?.data;
+        setNextPatientDetails({
+          audioAndReport: [{ audio: result.audio, report: result.report }],
+          user: result.nextUser,
+          otherDetails: result?.extraDetails,
+        });
+      } catch (err) {
+        console.log(err);
       }
-    }
-  }, [patientcollection, currno]);
+    };
+    nextPatientFunc();
+    // setNextPatient(nextPatient);
+    // } else {
+    //   //jab last patient ho only
+    //   console.log("This is the last patient in the collection.");
+    //   setNextPatientDetails({
+    //     audioAndReport: [],
+    //     user: null,
+    //   });
+    // }
+    // }
+  }, [currPatientFiles]);
 
   const handleClick = () => {
     setOpen(true);
@@ -77,7 +85,6 @@ export default function NextPatientDetails({}) {
         <HistoryReport
           open={open}
           setOpen={setOpen}
-         
           nextPatientDetails={nextPatientDetails}
         />
       )}
@@ -159,7 +166,7 @@ export default function NextPatientDetails({}) {
         <i className="fa-regular fa-file"></i>
         <div>
           <p>Department</p>
-          <h4>Neurology</h4>
+          <h4>{nextPatientDetails?.otherDetails?.Docter?.Specilization}</h4>
         </div>
       </div>
 
@@ -167,7 +174,7 @@ export default function NextPatientDetails({}) {
         <i className="fa-solid fa-hashtag"></i>
         <div>
           <p>Queue Number</p>
-          <h4>#2</h4>
+          <h4>{nextPatientDetails?.otherDetails?.QueueNum}</h4>
         </div>
       </div>
     </div>
