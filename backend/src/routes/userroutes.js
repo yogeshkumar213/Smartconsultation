@@ -28,7 +28,7 @@ export const userRoutes = (io) => {
     router.post("/doctersignup", doctersignup);
     router.post("/userlogin", userLogin);
     router.post("/docterlogin", docterLogin);
-    router.get("/getappointtime", isAuthenticated, getappointTime);
+    router.post("/getappointtime", isAuthenticated, getappointTime);
     // router.post("/hospital/docterName",getDocterName);
     router.get("/hospital/getDocterlist", isAuthenticated, getDocterList);
     return router;

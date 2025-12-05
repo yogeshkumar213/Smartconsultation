@@ -1,4 +1,11 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, {
+  Children,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import "../AppointmentList.css";
 import { HistoryReport } from "./HistoryReport";
@@ -11,8 +18,29 @@ import {
 import { margin, minWidth, width } from "@mui/system";
 import patientCompleted from "../../../../src/assets/patientcompleted.json";
 import DotLoader from "../../../../src/assets/Dotrecordinglightred.json";
+export const nextPatientContext = createContext();
+export const NextPatientContextProvider = ({ children }) => {
+  const [nextPatientDetails, setNextPatientDetails] = useState({
+    audioAndReport: [],
+    user: "",
+    otherDetails: "",
+  });
+  const contextValue = useMemo(() => {
+    return {
+      nextPatientDetails,
+      setNextPatientDetails,
+    };
+  }, [nextPatientDetails]);
+  return (
+    <nextPatientContext.Provider value={contextValue}>
+      {children}
+    </nextPatientContext.Provider>
+  );
+};
 
-export default function NextPatientDetails({}) {
+export const NextPatientDetails = () => {
+  const { nextPatientDetails, setNextPatientDetails } =
+    useContext(nextPatientContext);
   const [open, setOpen] = useState(false);
   const {
     // patientcollection,
@@ -25,11 +53,6 @@ export default function NextPatientDetails({}) {
 
   const { docterAPI } = useContext(docterContext);
 
-  const [nextPatientDetails, setNextPatientDetails] = useState({
-    audioAndReport: [],
-    user: "",
-    otherDetails: "",
-  });
   // console.log("patientcollection",patientcollection,currno);
   useEffect(() => {
     // console.log("patientcollection", patientcollection, currno);
@@ -179,4 +202,4 @@ export default function NextPatientDetails({}) {
       </div>
     </div>
   );
-}
+};

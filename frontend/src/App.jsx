@@ -24,66 +24,69 @@ import { TotalPatientCollectionProvider } from "./context/DocterAuthContext.jsx"
 import { UpComingAppointmentProvider } from "./context/PatientFormContext.jsx";
 // import { History } from "./pages/docterdash/History1.jsx/History.jsx";
 import "./App.css";
+import { NextPatientContextProvider } from "./pages/docterdash/NextAppointments/NextPatientDetails.jsx";
 
 function App() {
   return (
     <div className="User-Interface" style={{ minHeight: "100vh" }}>
       <Router>
-        <PatientFormProvider>
-          <AuthProvider>
-            <UpComingAppointmentProvider>
-              {/* <Card> */}
-              <SnakbarProvider>
-                {/* <CardProvider> */}
-                <DepartmentProvider>
-                  <SearchProvider>
-                    <DropdownProvider>
-                      <TotalPatientCollectionProvider>
-                        <DocterContextProvider>
-                          {/* <Test/> */}
-                          <Routes>
-                            <Route
-                              path="/user-profile"
-                              element={<ProfileDetails />}
-                            ></Route>
-                            {/* <Route path="/dropdown" element={<Dropdown />}></Route> */}
-                            <Route
-                              path="/docter-dashboard"
-                              element={<DocterDash />}
-                            ></Route>
-                            <Route
-                              path="/user-dashboard"
-                              element={<PatientDash />}
-                            ></Route>
-                            <Route
-                              path="/auth/*"
-                              element={<AuthParent />}
-                            ></Route>
+        <NextPatientContextProvider>
+          <PatientFormProvider>
+            <AuthProvider>
+              <UpComingAppointmentProvider>
+                {/* <Card> */}
+                <SnakbarProvider>
+                  {/* <CardProvider> */}
+                  <DepartmentProvider>
+                    <SearchProvider>
+                      <DropdownProvider>
+                        <TotalPatientCollectionProvider>
+                          <DocterContextProvider>
+                            {/* <Test/> */}
+                            <Routes>
+                              <Route
+                                path="/user-profile"
+                                element={<ProfileDetails />}
+                              ></Route>
+                              {/* <Route path="/dropdown" element={<Dropdown />}></Route> */}
+                              <Route
+                                path="/docter-dashboard"
+                                element={<DocterDash />}
+                              ></Route>
+                              <Route
+                                path="/user-dashboard"
+                                element={<PatientDash />}
+                              ></Route>
+                              <Route
+                                path="/auth/*"
+                                element={<AuthParent />}
+                              ></Route>
 
-                            {/* docter routes */}
+                              {/* docter routes */}
 
-                            <Route
-                              path="/docter-profile"
-                              element={<DocterProfile />}
-                            ></Route>
-                            <Route
-                              path="/docter-profile-edit"
-                              element={<DocterProfileEdit />}
-                            ></Route>
-                            <Route path="/doc-logout" element={<Logout />}>
-                              {" "}
-                            </Route>
-                            {/* <Route path="/history" element={<History/>}></Route> */}
-                          </Routes>
-                        </DocterContextProvider>
-                      </TotalPatientCollectionProvider>
-                    </DropdownProvider>
-                  </SearchProvider>
-                </DepartmentProvider>
-              </SnakbarProvider>
-            </UpComingAppointmentProvider>
-          </AuthProvider>
-        </PatientFormProvider>
+                              <Route
+                                path="/docter-profile"
+                                element={<DocterProfile />}
+                              ></Route>
+                              <Route
+                                path="/docter-profile-edit"
+                                element={<DocterProfileEdit />}
+                              ></Route>
+                              <Route path="/doc-logout" element={<Logout />}>
+                                {" "}
+                              </Route>
+                              {/* <Route path="/history" element={<History/>}></Route> */}
+                            </Routes>
+                          </DocterContextProvider>
+                        </TotalPatientCollectionProvider>
+                      </DropdownProvider>
+                    </SearchProvider>
+                  </DepartmentProvider>
+                </SnakbarProvider>
+              </UpComingAppointmentProvider>
+            </AuthProvider>
+          </PatientFormProvider>
+        </NextPatientContextProvider>
       </Router>
     </div>
   );

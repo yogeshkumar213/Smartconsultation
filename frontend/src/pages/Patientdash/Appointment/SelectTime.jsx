@@ -5,7 +5,7 @@ import "../Patientdash.css";
 import { useFormData } from "../../../context/PatientFormContext";
 import FormControl from "@mui/material/FormControl";
 import { AgeGender } from "./AgeGender";
-export default function SelectTime() {
+export default function SelectTime({ Date, Docter }) {
   const [prescheduledtime, setPrescheduledTime] = useState([]);
   const [appointtime, setAppointTime] = useState("");
   const { client } = useAuth();
@@ -19,7 +19,10 @@ export default function SelectTime() {
   const { formData, setFormData } = useFormData();
   useEffect(() => {
     client
-      .get("http://localhost:5050/api/v1/getappointtime")
+      .post("http://localhost:5050/api/v1/getappointtime", {
+        Date: Date,
+        Docter: Docter,
+      })
       .then((res) => {
         console.log(res);
         setPrescheduledTime(res.data.message);
@@ -27,7 +30,7 @@ export default function SelectTime() {
       .catch((err) => {
         console.log(err);
       });
-  }, []);
+  }, [formData.Date]);
   // const handleChange = (event) => {
   //   setAge(event.target.value);
   // };
@@ -55,31 +58,35 @@ export default function SelectTime() {
         color: "black",
       }}
     >
-      {prescheduledtime.map((item) => {
-        return (
-          // <div>
-          <div
-            key={item}
-            className="item"
-            onClick={() => handleTime(item)}
-            value={formData.Time}
-            style={{
-              display: "flex",
-              border: "1px solid black",
-              padding: "0.2rem 1rem",
-              borderRadius: "3rem",
-              margin: "0.4rem",
-              fontSize: "0.8rem",
-              cursor: "pointer",
-              ...(appointtime == item ? { backgroundColor: "#1976d2" } : {}),
-            }}
-          >
-            {item}
-          </div>
+      {prescheduledtime.length!=0
+        ? prescheduledtime.map((item) => {
+            return (
+              // <div>
+              <div
+                key={item}
+                className="item"
+                onClick={() => handleTime(item)}
+                value={formData.Time}
+                style={{
+                  display: "flex",
+                  border: "1px solid black",
+                  padding: "0.2rem 1rem",
+                  borderRadius: "3rem",
+                  margin: "0.4rem",
+                  fontSize: "0.8rem",
+                  cursor: "pointer",
+                  ...(appointtime == item
+                    ? { backgroundColor: "#1976d2" }
+                    : {}),
+                }}
+              >
+                {item}
+              </div>
 
-          // </div>
-        );
-      })}
+              // </div>
+            );
+          })
+        : <p className="text-red-500 font-medium">The doctor's schedule is full for today. Please select a different day.</p>}
       {appointtime && (
         <div className="mt-8 ">
           <AgeGender
@@ -89,7 +96,6 @@ export default function SelectTime() {
             options={[
               { value: "male", label: "Male" },
               { value: "female", label: "Female" },
-             
             ]}
             age={age}
             setAge={setAge}

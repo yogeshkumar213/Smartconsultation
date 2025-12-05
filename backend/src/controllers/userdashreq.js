@@ -17,6 +17,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 import dotenv from "dotenv";
 import { Counter } from "../models/counter.js";
+import mongoose from "mongoose";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 
@@ -124,13 +125,38 @@ const getuserprofile = async (req, res) => {
 
 }
 const getNextQueueNum = async (docterDepartment) => {
-    const counter = await Counter.findOneAndUpdate(
-        { _id: docterDepartment },
-        { $inc: { queueNumber: 1 } },// $inc prevent from race condition
-        { new: true, upsert: true }//upsert: true ka matlab: Agar document exists nahi karta → automatically create kar do.
 
-    )
-    return counter.queueNumber;
+    let counterDoc = await Counter.findOne({ _id: docterDepartment });
+    const todayDate = new Date().toISOString().split("T")[0];
+    // Try to find the counter document for this department if the date is not matching today date then reset the date means now queueNum start from 1
+    if (!counterDoc || counterDoc.lastResetDate != todayDate) {
+        //then reset the date
+        counterDoc = await Counter.findByIdAndUpdate(
+            { _id: docterDepartment },
+            {
+                $set: {
+                    QueueNum: 1,
+                    lastResetDate: todayDate
+
+                },
+
+            },
+            { new: true, upsert: true }
+        )
+        return 1;
+
+    }
+    else {
+        const counter = await Counter.findOneAndUpdate(
+            { _id: docterDepartment },
+            { $inc: { QueueNum: 1 } },// $inc prevent from race condition $inc operater is an atomic operater
+            { new: true, upsert: true }//upsert: true ka matlab: Agar document exists nahi karta → automatically create kar do.
+
+        )
+        return counter.QueueNum;
+
+    }
+
 }
 const getAllUpcomingAppointment = async (req, res) => {
     try {
@@ -290,23 +316,115 @@ const appointment = async (req, res) => {
         res.status(500).json({ message: "internale server Error", error: err.message })
     }
 
+
 }
+const stringToMinute = (slot) => {
+    const [time, period] = slot.split(" ");
+    let [hours, minutes] = time.split(":").map(Number);
+    if (period == "AM" && hours === 12) {
+        hours = 0;
+    }
+    else if (period == "PM" && hours != 12) {
+        hours += 12;
+    }
+    return hours * 60 + minutes;
+}
+const getIstDate = async (date) => {
+    const utcDate = new Date(date);
+    const addextraTime = 5.5 * 60 * 60 * 1000;
+    const istTime = utcDate.getTime() + addextraTime;
+    return new Date(istTime);
+}
+const getLocalISODateString = (dateObj) => {
+    return dateObj.toLocaleDateString('sv-SE');
+};
+const getAvailableSlot = async (Docter, dateString, appointTime) => {//jo datestring client se aa rhi hai wo UTC mai aa rhi hai or mera new Date IST mai date ko generate karta hai 
+
+    const utcToIst = await getIstDate(dateString);
+    console.log("utctoist", utcToIst);
+    const docterId = new mongoose.Types.ObjectId(Docter);
+
+    const startOfDay = new Date(utcToIst);
+
+    startOfDay.setHours(0, 0, 0, 0);
+    console.log("Start of day", startOfDay);
+    const endOfDay = new Date(utcToIst);
+    endOfDay.setHours(23, 59, 59, 999);
+    const findSlot = await Appointment.find({
+        Docter: docterId,
+        isCompleted: false,
+        Date: {
+            $gte: startOfDay,
+            $lte: endOfDay
+        }
+    }).select('Time -_id').exec();
+    console.log("findSlot", findSlot); //[{ Time: '09:00 AM' }, { Time: '03:30 PM' }]	An array of objects, where each object has a property named Time.
+
+    const now = new Date();
+    console.log("now date", now.toISOString().split("T")[0])
+    const isToday = getLocalISODateString(now) === getLocalISODateString(startOfDay);
+    const currMinutes = now.getHours() * 60 + now.getMinutes();
+
+
+
+    const bookedTimes = findSlot.map((appointment) => appointment.Time);//This ensures that your bookedTimes is a clean list of strings, like ['09:00 AM', '03:30 PM']
+    const availableSlot = appointTime.filter((slot) => {
+        const isNotBooked = !bookedTimes.includes(slot)
+        let isFutureTime = true;
+        if (isToday) {
+            const slotMinutes = stringToMinute(slot);
+            isFutureTime = slotMinutes > currMinutes;
+        }
+        return isNotBooked && isFutureTime
+    })
+    return availableSlot;
+
+    // const findSlot = await Appointment.aggregate([
+    //     {
+    //         $match: {
+    //             Docter: docterId,
+    //             isCompleted: false,
+    //             $expr: {
+    //                 $eq: [
+    //                     {
+    //                         $dateToString: { format: "%Y-%m-%d", date: "$Date", timezone: "Asia/Kolkata" }
+    //                     }, extractedDate
+    //                 ]
+
+    //             }
+    //         }
+    //     },
+    //     { $project: { TimeSlot: "$Time" } }
+    // ]);
+    // console.log("findSlot", findSlot);
+
+
+}
+
 const getappointTime = async (req, res) => {
+    const dateString = req.body.Date;
+    const Docter = req.body.Docter;
+    console.log("dateString and Docter", dateString, Docter);
+    const appointTime = ["09:00 AM",
+        "09:30 AM",
+        "10:00 AM",
+        "10:30 AM",
+        "11:00 AM",
+        "11:30 AM",
+        "02:00 PM",
+        "02:30 PM",
+        "03:00 PM",
+        "03:30 PM",
+        "04:00 PM",
+        "04:30 PM"]
+
+
+    const availableSlot = await getAvailableSlot(Docter, dateString, appointTime);
+    console.log(availableSlot);
     try {
         console.log("request for time is came")
-        const appointDate = ["09:00 AM",
-            "09:30 AM",
-            "10:00 AM",
-            "10:30 AM",
-            "11:00 AM",
-            "11:30 AM",
-            "02:00 PM",
-            "02:30 PM",
-            "03:00 PM",
-            "03:30 PM",
-            "04:00 PM",
-            "04:30 PM"]
-        return res.status(200).json({ message: appointDate });
+
+        return res.status(200).json({ message: availableSlot });
     }
     catch (err) {
         console.log(err);

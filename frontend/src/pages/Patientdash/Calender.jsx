@@ -44,12 +44,23 @@ export default function BasicDateCalendar() {
     //   showSnakbar(err);
     // }
   };
+  React.useEffect(()=>{
+    if(formData.Date && !formData.Docter){
+      alert("please select docter first for which you want to schedule appointment")
+    }
+  },[formData.Date]);
   const handleDateChange = (value) => {
     console.log(value);
     // const date = value.$d;
     // const newDate = date.toDateString();
     const newDate = value.format("YYYY-MM-DD");
-    console.log(newDate);
+    console.log("newDate",newDate);
+    const currentDate=new Date().toISOString().split("T")[0];
+    console.log("currentDate",currentDate);
+    if(newDate<currentDate){ //using < and > now our string will compare in dictionary order like jab tak difference naa mille string mai "Apple" vs "Banana" sbse phle "A" and "B" compare honge 'A' < 'B' true (yhi comparision ruk jayega because difference mil gya(mtlb dono word alag alag hai ))
+      alert("Please select today's date or a future date for your appointment.");
+      return;
+    }
     setAppointDate(newDate);
     setFormData((prev) => {
       return {
@@ -77,8 +88,8 @@ export default function BasicDateCalendar() {
             margin: "1rem",
           }}
         >
-          <DateCalendar value={formData.Date} onChange={handleDateChange} />
-          {formData.Date && <SelectTime />}
+          <DateCalendar value={formData.Date} onChange={handleDateChange}/>
+          {formData.Date && formData.Docter && <SelectTime Date={formData.Date} Docter={formData.Docter}/>}
           <Button
             variant="contained"
             style={{ width: "100%" }}

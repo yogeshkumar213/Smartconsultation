@@ -6,10 +6,14 @@ import { socket } from "./Socket/Socket.js";
 import { PatientCollectionContext } from "../../context/DocterAuthContext";
 import { Children } from "react";
 import { useCallback } from "react";
+import {nextPatientContext} from "../docterdash/NextAppointments/NextPatientDetails.jsx";
+
 
 export const Card = () => {
   const { docterAPI } = useContext(docterContext);
   const [totalpatient, setTotalPatient] = useState(null);
+  const {nextPatientDetails, setNextPatientDetails}=useContext(nextPatientContext);
+  
   const {
     // patientCollection,
     // setPatientCollection,
@@ -98,7 +102,7 @@ export const Card = () => {
       console.log("connected", socket.id);
     });
 
-    // socket.on("totalConsultedPatients", handleConsultedEvent);
+    socket.on("totalConsultedPatients", handleConsultedEvent);
 
     socket.on("totalPatient", handleTotalPatientEvent);
 
@@ -147,7 +151,7 @@ export const Card = () => {
             {" "}
             Next Appointment <i className="fa-regular fa-clock"></i>
           </span>
-          <h2>{nextPatientDocument?.Time ?? "No next Appointment"}</h2>
+          <h2>{nextPatientDetails?.otherDetails?.Time ?? "No next Appointment"}</h2>
           <p>{totalWaintingPatients} patient waiting</p>
         </div>
       </div>

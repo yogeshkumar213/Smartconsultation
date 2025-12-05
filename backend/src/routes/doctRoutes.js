@@ -395,7 +395,7 @@ export const docterRoutes = (io) => {
 
 
 
-            res.status(200).json({ message: "data successfully fetched", nextUser: getNextPatient.Patient, audio: audio, report: getReport,extraDetails:getNextPatient});
+            res.status(200).json({ message: "data successfully fetched", nextUser: getNextPatient.Patient, audio: audio, report: getReport, extraDetails: getNextPatient });
         }
         catch (err) {
             console.log(err);
@@ -767,7 +767,7 @@ export const docterRoutes = (io) => {
             const Collection = await Appointment.aggregate([
                 {
                     $match: {
-                        Docter: req.docterId,
+                        Docter: new mongoose.Types.ObjectId(req.docterId),
 
                         $expr: {
                             $eq: [
@@ -796,19 +796,34 @@ export const docterRoutes = (io) => {
 
     })
     const getcurQueue = async (docterid) => {
+        const todayDate = new Date();
+
+        const startOfDay = new Date(todayDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(todayDate);
+        endOfDay.setHours(23, 59, 59, 999);
         const queue = await Appointment.findOne({
             Docter: new mongoose.Types.ObjectId(docterid),
-            isCompleted: false
+            isCompleted: false,
+            Date: { $gte: startOfDay, $lte: endOfDay }
         }).sort({ QueueNum: 1 }).populate("Patient");
         return queue;
 
     }
     const getNextCurrQueue = async (docterid) => {
+        const todayDate = new Date();
+
+        const startOfDay = new Date(todayDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(todayDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
         const queue = await Appointment.findOne({
             Docter: new mongoose.Types.ObjectId(docterid),
             isCompleted: false,
+            Date: { $gte: startOfDay, $lte: endOfDay },
         }).sort({ QueueNum: 1 }).skip(1)
-            .populate(["Patient","Docter"]);
+            .populate(["Patient", "Docter"]);
         return queue;
     }
     router.get("/api/appointments", verifyDocter, async (req, res) => {
