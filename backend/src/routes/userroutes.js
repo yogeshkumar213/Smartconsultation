@@ -9,7 +9,7 @@ import { io } from "../../app.js";
 
 
 import { usersignup, doctersignup, userLogin, docterLogin, isAuthenticated, refreshAccessToken } from "../controllers/mongoManeger.js"
-import { getDocterList, getappointTime, appointment, getuserprofile, updateuserdata, patdel,getAllUpcomingAppointment } from "../controllers/userdashreq.js";
+import { getDocterList, getappointTime, appointment, getuserprofile, updateuserdata, patdel,getAllUpcomingAppointment,getCurrQueueNum } from "../controllers/userdashreq.js";
 import { Appointment } from "../models/appointment.js";
 
 
@@ -23,6 +23,7 @@ export const userRoutes = (io) => {
         { name: 'PatientAudio', maxCount: 1 }, 
         { name: 'PatientFile', maxCount: 4 }
     ]), appointment);
+    router.post("/getcurrQueueNum",isAuthenticated,getCurrQueueNum);
     router.get("/getuserprofile", getuserprofile);
     router.post("/usersignup", usersignup)
     router.post("/doctersignup", doctersignup);

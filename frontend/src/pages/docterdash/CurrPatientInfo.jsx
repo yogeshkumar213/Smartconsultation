@@ -8,6 +8,8 @@ import { PatientCollectionContext } from "../../context/DocterAuthContext";
 import { useContext } from "react";
 import { useEffect } from "react";
 import { docterContext } from "../../context/DocterAuthContext";
+import Lottie from "lottie-react";
+import loadingAnimation from "../../assets/lottie/LoadingCircleAnimation.json";
 
 export default function CurrentPatient() {
   const [notes, setNotes] = useState(false);
@@ -17,6 +19,7 @@ export default function CurrentPatient() {
   // const [patientcollectioninfo, setPatientCollectionInfo] = useState([]);
   // const [singlepatient, setSinglePatient] = useState();
   const [loading, setLoading] = useState(false);
+  const [ispatientcompleted, setIsPatientCompleted] = useState(false);
 
   const {
     // patientcollection,
@@ -32,28 +35,28 @@ export default function CurrentPatient() {
   // console.log(patientcollection);
 
   const nextPatient = async () => {
+    alert("is patient consulted ");
     setLoading(true);
-    if (currPatientDocument) {
-      console.log("patientClicked");
+    // if (currPatientDocument) {
+    console.log("patientClicked");
 
-      setCurrNo((cur) => cur + 1);
-      try {
-        const markAppointmentComp = await docterAPI.post(
-          "/markAppointmentComp",
-          { currPatientDocument: currPatientDocument }
-        );
-        console.log(markAppointmentComp);
-        setCurrPatientDocument(markAppointmentComp.nextPatientAppointment);
-        setLoading(false);
-      } catch (err) {
-        setLoading(false);
-        console.log(err);
-      }
-    } else {
-      console.log("no current patient");
-      alert("No current patient to mark as consulted");
-      return;
+    // setCurrNo((cur) => cur + 1);
+    try {
+      const markAppointmentComp = await docterAPI.post("/markAppointmentComp", {
+        currPatientDocument: currPatientDocument,
+      });
+      console.log(markAppointmentComp.data);
+      setCurrPatientDocument(markAppointmentComp.data.nextPatientAppointment);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
     }
+    // } else {
+    //   console.log("no current patient");
+    //   alert("No current patient to mark as consulted");
+    //   return;
+    // }
   };
   // useEffect(() => {
   //   // setcurrPatient();
@@ -102,18 +105,22 @@ export default function CurrentPatient() {
   // , currPatient]
 
   useEffect(() => {
-    if (currPatientDocument) {
-      console.log("currPatientDocument", currPatientDocument);
-      const currUserFiles = async () => {
-        const fetchedFromAws = await docterAPI.post("/getpatientfile", {
-          patientfile: currPatientDocument.PatientFile,
-          patientAudio1: currPatientDocument.PatientAudio,
-        });
-        console.log(fetchedFromAws.data);
-        setCurrPatientFiles(fetchedFromAws.data);
-      };
-      currUserFiles();
+    if (currPatientDocument === undefined) return;
+    if (currPatientDocument === null) {
+      setIsPatientCompleted(true);
+      return;
     }
+    setIsPatientCompleted(false);
+    console.log("currPatientDocument", currPatientDocument);
+    const currUserFiles = async () => {
+      const fetchedFromAws = await docterAPI.post("/getpatientfile", {
+        patientfile: currPatientDocument.PatientFile,
+        patientAudio1: currPatientDocument.PatientAudio,
+      });
+      console.log(fetchedFromAws.data);
+      setCurrPatientFiles(fetchedFromAws.data);
+    };
+    currUserFiles();
   }, [currPatientDocument]);
 
   useEffect(() => {
@@ -198,7 +205,15 @@ export default function CurrentPatient() {
         onClick={nextPatient}
         style={{ marginTop: "2rem" }}
       >
-        Mark as Consulted
+        {loading ? (
+          <div className="h-6 w-6">
+            <Lottie animationData={loadingAnimation} loop={true} />
+          </div>
+        ) : ispatientcompleted ? (
+          "All appointments completed"
+        ) : (
+          "Mark as Consulted"
+        )}
       </Button>
     </div>
   );

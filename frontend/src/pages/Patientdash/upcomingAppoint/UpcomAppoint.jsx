@@ -4,29 +4,73 @@ import { UpComingAppointmentContext } from "../../../context/PatientFormContext"
 import { useContext } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { useEffect } from "react";
+import { socket } from "../../docterdash/Socket/Socket.js";
 
 export default function UpcomAppoint() {
   const { client } = useAuth();
-  const { appointmentFormData,setAppointmentFormData } = useContext(UpComingAppointmentContext);
+  const { appointmentFormData, setAppointmentFormData } = useContext(
+    UpComingAppointmentContext
+  );
+  const [currQueueNum, setCurrQueueNum] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const fetchUpcomingAppointment = useCallback(async () => {
     try {
       const res = await client.get("/getAllUpcomingAppointment");
-      console.log("UpcomingAppointment",res);
+      console.log("UpcomingAppointment", res);
       setAppointmentFormData(res.data.appointment);
-      
-
     } catch (err) {
       console.log(err);
     }
-  },[]);
+  }, []);
+
   useEffect(() => {
     fetchUpcomingAppointment();
   }, [fetchUpcomingAppointment]);
 
+  // useEffect(() => {
+  const getCurrNum = useCallback(async () => {
+    const extractDepartment =
+      appointmentFormData.length > 0
+        ? appointmentFormData.map((app) => app.specilization)
+        : [];
+    console.log("extractDepartment", extractDepartment);
+    if (!extractDepartment) return;
+    setLoading(true);
+    try {
+      const res = await client.post("/getcurrQueueNum", {
+        docterDepartment: extractDepartment,
+      });
+      console.log("getCurrNum res", res);
+      setCurrQueueNum((prev) => {
+        return {
+          ...prev,
+          ...res.data.result,
+        };
+      });
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [appointmentFormData, client]);
+
+  // }, [appointmentFormData]);
+
+  useEffect(() => {
+    const handler = (data) => {
+      setCurrQueueNum(data.result);
+    };
+    socket.on("currQueueNum", handler);
+    return () => {
+      socket.off("currQueueNum", handler);
+    };
+  }, []);
+
   useEffect(() => {
     if (appointmentFormData.length > 0) {
       console.log("appointmentformData", appointmentFormData);
+      getCurrNum();
     }
   }, [appointmentFormData]); //kisi ek field ko check kar lenge ki data aaya hai ya nhi ager aisa nhi karte too empty object bhi true hoota hai js mai
   return (
@@ -35,7 +79,7 @@ export default function UpcomAppoint() {
         <h2>Upcoming Appointments</h2>
 
         {appointmentFormData.length > 0 &&
-          appointmentFormData.map((app, index) => (
+          appointmentFormData?.map((app, index) => (
             <div className="appointmentSchedule" key={index}>
               <div
                 style={{
@@ -58,7 +102,12 @@ export default function UpcomAppoint() {
                     color: "blue",
                   }}
                 >
-                  CurrQueue <b>:</b> &nbsp;&nbsp;8
+                  CurrQueue <b>:</b> &nbsp;&nbsp;
+                  {currQueueNum[app.specilization] != undefined
+                    ? currQueueNum[app.specilization]
+                    : loading
+                    ? "Loading..."
+                    : "Not started yet"}
                 </p>
               </div>
 

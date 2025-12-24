@@ -9,7 +9,7 @@ import bcrypt from "bcrypt";
 import { verifyDocter } from "../controllers/mongoManeger.js";
 import { Appointment } from "../models/appointment.js";
 import { io } from "../../app.js";
-import mime from "mime-types";
+import mime, { charset } from "mime-types";
 
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -22,9 +22,10 @@ import fs from "fs";
 import path from "path";
 import { json } from "stream/consumers";
 import { type } from "os";
-import mongoose from "mongoose";
+import mongoose, { mongo } from "mongoose";
 import { Counter } from "../models/counter.js";
-
+// import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import nodemailer from "nodemailer";
 
 dotenv.config();
 
@@ -114,8 +115,10 @@ export const docterRoutes = (io) => {
         console.log("uploadReport called with req:", req.body);
         console.log("Uploaded files:", req.files);
         const patientDocument = req.body.currPatientDocument;
+        console.log("patientDocument", patientDocument);
+
         let currDocument;
-        if (typeof patientDocument === 'string' && patientDocument.length > 0) {
+        if (typeof patientDocument === 'string') {
             try {
                 currDocument = JSON.parse(patientDocument);
                 console.log("currPatientDocument", currDocument);
@@ -159,18 +162,84 @@ export const docterRoutes = (io) => {
                     mimetype: file.mimetype
                 }
             }))
+
             console.log("uploadedFiles", uploadedFiles);
 
             const storeFilesInDB = await Appointment.findOneAndUpdate({ _id: currDocument }, { $push: { 'ConsultationNotes.UploadedReport': { $each: uploadedFiles } } }, { new: true });
             console.log("storeFilesInDB", storeFilesInDB);
-            const findUser = await User.findOne({
-                _id: currDocument.
-                    appointmentData
-                    .Patient
-            });
-            console.log("findUser", findUser);
+            const findUser = await Appointment.findOne({
+                _id: currDocument
+            }).populate("Patient").populate("Docter");
 
-            res.status(200).json({ message: `${findUser.UserName} files uploaded successfully` }); //storeFilesInDB
+            console.log("findUser", findUser);
+            const patientEmail = findUser?.Patient?.Email;
+            const docterEmail = findUser?.Docter?.Email;
+            console.log("patientEmail and docterEmail", patientEmail, docterEmail);
+
+            // this code is for setting aws SES service now we have not any kind of domain so we have to use nodemailer
+
+            // const client1 = new SESClient({ region: process.env.AWS_REGION });
+
+            // const params = {
+            //     Source: docterEmail,
+            //     Destination: {
+            //         ToAddresses: [patientEmail]
+            //     },
+            //     Message: {
+            //         Subject: {
+            //             Data: "Appointment Completed - Reports Uploaded",
+            //             charset: "UTF-8"
+            //         },
+            //         Body: {
+            //             Text: {
+            //                 Data: `${findUser?.Patient?.UserName} Your consultation is completed successfully.`,
+            //                 Charset: "UTF-8",
+            //             }
+            //         }
+            //     }
+            // }
+            // const command = new SendEmailCommand(params);
+            // const response = await client1.send(command);
+            // console.log("Email send successfully",response);
+            console.log("password", process.env.PASSWORD);
+
+            const transporter = nodemailer.createTransport({
+                service: "gmail",
+                auth: {
+                    user: "xyogesh658@gmail.com",
+                    pass: process.env.PASSWORD, // The 16-character App Password
+                },
+            });
+            const info = await transporter.sendMail({
+                from: `"Dozify" <doctor@gmail.com>`,// sender address
+                to: patientEmail, // list of receivers
+                subject: "Medical Document Uploaded Successfully ",
+                text: `
+                Dear ${findUser?.Patient?.UserName},
+
+                Your medical file has been uploaded successfully.
+
+                If you have any questions or need further assistance, please feel free to contact us.
+
+                Kind regards,
+                Dr${findUser?.Docter?.DocterName}
+                `, // Plain-text version of the message
+                html: `
+               <p>Dear ${findUser?.Patient?.UserName},</p>
+
+               <p>Your medical document has been <strong>uploaded successfully</strong>.</p>
+
+               <p>If you have any questions or require further assistance, please do not hesitate to contact us.</p>
+
+               <p>Kind regards,<br/>
+               <strong>Dr. ${findUser?.Docter?.DocterName}</strong></p>
+               `
+            });
+
+            console.log("Message sent:", info.messageId)
+
+
+            return res.status(200).json({ message: `${findUser?.Patient?.UserName} files uploaded successfully` }); //storeFilesInDB
 
         } catch (err) {
             console.log(err);
@@ -179,11 +248,72 @@ export const docterRoutes = (io) => {
 
 
     }));
+    const getIsLastAppointment = async (docterId) => {
+        const todayDate = new Date().toISOString().split("T")[0];
+        const pendingAppointment = await Appointment.findOne({
+            Docter: docterId,//    { $dateToString: { format: "%Y-%m-%d", date: "$Date", timezone: "Asia/Kolkata" } },
+            isCompleted: false,
+            Date: { $gte: new Date(todayDate + "T00:00:00.000Z"), $lte: new Date(todayDate + "T23:59:59.999Z") }
+        })
+        return !pendingAppointment;
 
-    router.post("/markAppointmentComp", async (req, res) => {
+
+    }
+    router.get("/api/docter/isActive", verifyDocter, async (req, res) => {
+        try {
+            const docterId = req.docterId;
+            const docterData = await Docter.findOne({ _id: docterId });
+            console.log("docterData", docterData);
+            if (!docterData) {
+                return res.status(404).json({ message: "Docter not found" });
+            }
+            let counter = await Counter.findOne({ docterDepartment: docterData.Specilization });
+            const todayDate = new Date().toISOString().split("T")[0];
+
+            const isAppointmentExist = await Appointment.findOne({
+                Docter: new mongoose.Types.ObjectId(docterId),
+                $expr: {
+                    $eq: [
+                        { $dateToString: { format: "%Y-%m-%d", date: "$Date", timezone: "Asia/Kolkata" } },
+                        todayDate
+                    ]
+                },
+                isCompleted: false
+            })
+            console.log("todayDate", todayDate);
+            console.log("docterid", docterId)
+            console.log("isAppointmentExist", isAppointmentExist);
+            if (!isAppointmentExist) {
+                return res.json({ message: "No active appointments for today" });
+            }
+            if (!counter || counter.currentQueueNum === 0) {
+                counter = await Counter.findOneAndUpdate(
+                    { docterDepartment: docterData.Specilization },
+                    { $set: { currentQueueNum: 1, lastResetDate: todayDate } },
+                    { upsert: true, new: true }
+                );
+                io.emit("currQueueNum", { result: { [docterData.Specilization]: counter.currentQueueNum } });
+                return res.json({ success: true, currentQueueNum: counter.currentQueueNum })
+            }
+            else {
+                io.emit("currQueueNum", { result: { [docterData.Specilization]: counter.currentQueueNum } });
+                return res.json({
+                    success: true,
+                    currentQueueNum: counter.currentQueueNum
+                });
+            }
+
+        } catch (err) {
+
+            console.log(err);
+            res.status(500).json({ message: "internal server error" });
+        }
+    })
+    router.post("/markAppointmentComp", verifyDocter, async (req, res) => {
         const { Docter, PatientAudio, PatientFile } = req.body.currPatientDocument;
         const appointmentId = req.body.currPatientDocument._id;
         console.log("currPatientDocument", req.body);
+        const todayDate = new Date().toISOString().split("T")[0];
         if (!appointmentId) {
             return res.status(400).json({ message: "Appointment ID is required" });
         }
@@ -193,14 +323,64 @@ export const docterRoutes = (io) => {
             'ConsultationNotes.consultedAt': new Date()
         }
         try {
-            const markAppointmentComp = await Appointment.findOneAndUpdate({ _id: appointmentId }, { $set: updatedFields }, { new: true });
+            const markAppointmentComp = await Appointment.findOneAndUpdate({ _id: appointmentId }, { $set: updatedFields }, { new: true }).populate("Docter");
+            const counter = await Counter.findOne(
+                {
+                    docterDepartment: markAppointmentComp.Docter.
+                        Specilization
+                });
+
+            if (!counter || counter.lastResetDate != todayDate) {
+                await Counter.findOneAndUpdate(
+                    { docterDepartment: markAppointmentComp.Docter.Specilization },
+                    {
+                        $set: {
+                            currentQueueNum: 0,
+                            lastResetDate: todayDate
+                        }
+                    },
+                    { upsert: true }
+                );
+                counter = await Counter.findOne({
+                    docterDepartment: markAppointmentComp.Docter.
+                        Specilization
+                });
+            }
+            console.log("counter.QueueNum =", counter?.QueueNum);
+            console.log("counter.currentQueueNum =", counter?.currentQueueNum);
+
+            const nextQueueNum = markAppointmentComp.QueueNum + 1;
+
+            const markCurrQueue = await Counter.findOneAndUpdate(
+                {
+                    docterDepartment: markAppointmentComp.Docter.Specilization,
+                    currentQueueNum: { $lt: nextQueueNum }
+                },
+                { $set: { currentQueueNum: nextQueueNum } },
+                {
+                    new: true
+                }
+            );
+            console.log("markCurrQueue", markCurrQueue);
             console.log("markAppointmentComp", markAppointmentComp);
             if (markAppointmentComp) {
-                const nextPatientAppointment = await getcurQueue();
-                res.status(200).json({ message: "Appointment marked as completed successfully", nextPatientAppointment });
-
+                const nextPatientAppointment = await getQueueNum(req.docterId);
+                console.log("nextPatientAppointment123", nextPatientAppointment);
                 io.emit("totalConsultedPatients", "updated count");
                 io.emit("totalWaitingPatient", "change waiting data");
+                let isLastAppointment = await getIsLastAppointment(req.docterId);
+                res.status(200).json({ message: "Appointment marked as completed successfully", nextPatientAppointment });
+
+
+                if (markCurrQueue && !isLastAppointment) {
+                    console.log("markCurrQueue", markCurrQueue);
+
+                    return io.emit("currQueueNum", { result: { [markCurrQueue.docterDepartment]: markCurrQueue.currentQueueNum } });
+
+                }
+                else {
+                    io.emit("currQueueNum", { result: { [markCurrQueue.docterDepartment]: "Today's appointment queue is completed." } });
+                }
             }
             else {
                 res.status(404).json({ message: "Appointment not found" });
@@ -269,17 +449,17 @@ export const docterRoutes = (io) => {
             const userPrompt = `
         Analyze the following patient's condition by cross-referencing the self-reported symptoms and the official medical report.
 
-          1.  **Patient Symptoms (Audio Transcript):**
-        ---
-        ${audtioTranscript}
+          1. ** Patient Symptoms(Audio Transcript):**
+            ---
+            ${audtioTranscript}
         ---
 
-      2.  **Medical Findings (Report Text):**
-       ---
-       ${extractedText}
+                2. ** Medical Findings(Report Text):**
+                ---
+            ${extractedText}
       ---
 
-         Please provide a structured, simple summary in Hinglish that compares the patient's complaint with the report's diagnosis/finding.
+                Please provide a structured, simple summary in Hinglish that compares the patient's complaint with the report's diagnosis / finding.
         `;
             const messages = [
                 {
@@ -705,6 +885,7 @@ export const docterRoutes = (io) => {
 
     router.get("/api/consultedPatients", verifyDocter, async (req, res) => {
         console.log("docterid for consulted patients:", req.docterId);
+        const docterId = new mongoose.Types.ObjectId(req.docterId);
         // const today = new Date();
         // today.setHours(0, 0, 0, 0);
         // const startOfDay = today;
@@ -713,12 +894,13 @@ export const docterRoutes = (io) => {
         // endOfDay.setHours(23, 59, 59, 999);
         const todayString = new Date().toISOString().split('T')[0];
 
+
         try {
 
             const Collection = await Appointment.aggregate([
                 {
                     $match: {
-                        Docter: req.docterId,
+                        Docter: docterId,
                         $expr: {
                             $eq: [
                                 { $dateToString: { format: "%Y-%m-%d", date: "$Date", timezone: "Asia/Kolkata" } },
@@ -729,8 +911,10 @@ export const docterRoutes = (io) => {
                 },
                 { $project: { _id: 1, Patient: 1, Docter: 1, Date: 1, Time: 1, isCompleted: 1, ConsultationNotes: 1, PatientAudio: 1, PatientFile: 1, createdAt: 1 } }
             ]);
+            console.log("collection", Collection);
             const todayConsultedAppointments = Collection.filter(appointment => appointment.isCompleted);
             const totalConsultedPatients = todayConsultedAppointments.length;
+            console.log("todayConsultedAppointments", todayConsultedAppointments)
             // io.emit("totalConsultedPatients", totalConsultedPatients);
 
             // console.log("todayConsultedAppointments", todayConsultedAppointments);
@@ -795,7 +979,7 @@ export const docterRoutes = (io) => {
         }
 
     })
-    const getcurQueue = async (docterid) => {
+    const getQueueNum = async (docterid) => {
         const todayDate = new Date();
 
         const startOfDay = new Date(todayDate);
@@ -865,7 +1049,7 @@ export const docterRoutes = (io) => {
 
             // console.log("totalAppointment", totalAppointment);
             console.log("totalcollection", Collection);
-            const getCurrPatient = await getcurQueue(req.docterId);
+            const getCurrPatient = await getQueueNum(req.docterId);
             console.log("getCurrPatient", getCurrPatient);
             io.emit("totalPatient", totalAppointment);
 

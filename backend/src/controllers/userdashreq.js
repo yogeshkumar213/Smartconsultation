@@ -8,6 +8,7 @@ import path from 'path';
 import { uuid } from 'uuidv4';
 import { fileURLToPath } from 'url';
 import { Appointment } from '../models/appointment.js';
+import { Counter } from "../models/counter.js";
 
 // 👇 Simulate __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -16,7 +17,7 @@ const __dirname = path.dirname(__filename);
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 import dotenv from "dotenv";
-import { Counter } from "../models/counter.js";
+
 import mongoose from "mongoose";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
@@ -74,6 +75,51 @@ const patdel = async (req, res) => {
 
 
 
+const getCurrQueueNum = async (req, res) => {
+
+    try {
+        const { docterDepartment } = req.body;
+        console.log("docterDepartment in getCurrQueueNum", docterDepartment);
+        const counter = await Counter.find({
+            docterDepartment: { $in: docterDepartment }
+        });
+
+
+        console.log("counters in getCurrQueueNum", counter);
+        const result = {};
+        docterDepartment.forEach(dept => {
+            const counter = counter.find(c => c.docterDepartment === dept);
+
+            if (!counter || counter.currentQueueNum === 0) {
+                result[dept] = null; // waiting / not started
+            } else {
+                result[dept] = counter.currentQueueNum;
+            }
+        });
+        res.status(200).json({ message: "current queue number fetched successfully", result })
+
+
+
+        // const findCurrQueue = async () => {
+        //     await Promise.all(docterDepartment.map(async (dept) => {
+        //         const appointment = await Counter.findOne(
+        //             { docterDepartment: dept.DocterDepartment }
+        //         ).select("currentQueueNum -_id");
+        //         console.log("appointment in getCurrQueueNum", appointment);
+        //         io.emit("currQueueNum", appointment);
+        //         res.status(200).json({ message: "current queue number fetched successfully", appointment }
+        //         )
+        //     }))
+        // }
+        // findCurrQueue();
+        // console.log("findCurrQueue", findCurrQueue);
+    }
+
+    catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "internal server error in getCurrQueueNum" })
+    }
+}
 
 const updateuserdata = async (req, res) => {
     try {
@@ -126,13 +172,13 @@ const getuserprofile = async (req, res) => {
 }
 const getNextQueueNum = async (docterDepartment) => {
 
-    let counterDoc = await Counter.findOne({ _id: docterDepartment });
+    let counterDoc = await Counter.findOne({ docterDepartment });
     const todayDate = new Date().toISOString().split("T")[0];
     // Try to find the counter document for this department if the date is not matching today date then reset the date means now queueNum start from 1
     if (!counterDoc || counterDoc.lastResetDate != todayDate) {
         //then reset the date
-        counterDoc = await Counter.findByIdAndUpdate(
-            { _id: docterDepartment },
+        counterDoc = await Counter.findOneAndUpdate(
+            { docterDepartment },
             {
                 $set: {
                     QueueNum: 1,
@@ -148,7 +194,7 @@ const getNextQueueNum = async (docterDepartment) => {
     }
     else {
         const counter = await Counter.findOneAndUpdate(
-            { _id: docterDepartment },
+            { docterDepartment },
             { $inc: { QueueNum: 1 } },// $inc prevent from race condition $inc operater is an atomic operater
             { new: true, upsert: true }//upsert: true ka matlab: Agar document exists nahi karta → automatically create kar do.
 
@@ -162,6 +208,7 @@ const getAllUpcomingAppointment = async (req, res) => {
     try {
         console.log("req", req.user);
         const Patient = req.user.PatientId;
+        console.log("Patient id is", Patient);
 
         const appointments = await Appointment.find({ Patient, isCompleted: false }).populate("Docter");
         const appointment = appointments.map((a) => ({
@@ -172,6 +219,7 @@ const getAllUpcomingAppointment = async (req, res) => {
             Date: a.Date,
             Time: a.Time
         }));
+        console.log("appointment", appointment);
         res.status(200).json({ message: "Appointment Successfully Booked", appointment })
     }
     catch (err) {
@@ -416,7 +464,13 @@ const getappointTime = async (req, res) => {
         "03:00 PM",
         "03:30 PM",
         "04:00 PM",
-        "04:30 PM"]
+        "04:30 PM",
+        "05:00 PM",
+        "05:30 PM",
+        "06:00 PM",
+        "09:00 PM",
+        "10:00 PM"
+    ]
 
 
     const availableSlot = await getAvailableSlot(Docter, dateString, appointTime);
@@ -447,5 +501,5 @@ const getDocterList = async (req, res) => {
 
 
 
-export { appointment, getappointTime, getDocterList, getuserprofile, patdel, updateuserdata, getAllUpcomingAppointment };
+export { appointment, getappointTime, getDocterList, getuserprofile, patdel, updateuserdata, getAllUpcomingAppointment, getCurrQueueNum };
 

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const counterSchema = new mongoose.Schema({
-    _id: {
+    docterDepartment: {
         type: String,
         required: true,
     },
@@ -13,7 +13,13 @@ const counterSchema = new mongoose.Schema({
     lastResetDate: {
         type: String,
         default:new Date().toISOString().split("T")[0]
+    },
+    currentQueueNum:{
+        type: Number,
+        default:0
+
     }
+
 
 });
 const Counter = mongoose.model("Counter", counterSchema);

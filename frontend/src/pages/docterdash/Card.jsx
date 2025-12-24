@@ -6,14 +6,14 @@ import { socket } from "./Socket/Socket.js";
 import { PatientCollectionContext } from "../../context/DocterAuthContext";
 import { Children } from "react";
 import { useCallback } from "react";
-import {nextPatientContext} from "../docterdash/NextAppointments/NextPatientDetails.jsx";
-
+import { nextPatientContext } from "../docterdash/NextAppointments/NextPatientDetails.jsx";
 
 export const Card = () => {
   const { docterAPI } = useContext(docterContext);
   const [totalpatient, setTotalPatient] = useState(null);
-  const {nextPatientDetails, setNextPatientDetails}=useContext(nextPatientContext);
-  
+  const { nextPatientDetails, setNextPatientDetails } =
+    useContext(nextPatientContext);
+
   const {
     // patientCollection,
     // setPatientCollection,
@@ -40,13 +40,27 @@ export const Card = () => {
     }
   }, []);
 
+  // this api only test when the docter is active
+  const docterActive = useCallback(async () => {
+    try {
+      const res = await docterAPI.get("/api/docter/isActive");
+      console.log("docter is active or not", res.data.isActive);
+    } catch (err) {
+      console.log(err);
+    }
+  }, []);
+  
+  useEffect(() => {
+    docterActive();
+  }, []);
+
   const fetchAppointments = useCallback(async () => {
     try {
       const res = await docterAPI.get("/api/appointments");
       const currPatientData = res.data.currPatient;
 
       // setPatientCollection(patientCollectionData);
-      setCurrPatientDocument(currPatientData)
+      setCurrPatientDocument(currPatientData);
 
       const totalPatientCount = res.data.totalAppointment;
 
@@ -61,6 +75,7 @@ export const Card = () => {
   const fetchTotalWatingPatients = useCallback(async () => {
     if (currPatientDocument) {
       console.log("currentPatientDocument", currPatientDocument);
+
       try {
         const res = await docterAPI.post(
           "/api/appointments/waiting",
@@ -71,11 +86,14 @@ export const Card = () => {
         if (waitingPatients > 0) {
           setTotalWaintingPatients(waitingPatients);
         }
+        if (waitingPatients === 0) {
+          setTotalWaintingPatients(0);
+        }
       } catch (err) {
         console.log(err.data.err);
       }
     }
-  }, [docterAPI,currPatientDocument]);
+  }, [docterAPI, currPatientDocument]);
 
   useEffect(() => {
     if (currPatientDocument) {
@@ -88,10 +106,9 @@ export const Card = () => {
     };
   }, [currPatientDocument]);
 
-
   useEffect(() => {
     fetchAppointments();
- 
+
     fetchConsultedPatients();
 
     const handleConsultedEvent = () => fetchConsultedPatients();
@@ -110,7 +127,6 @@ export const Card = () => {
     return () => {
       socket.off("totalConsultedPatients", handleConsultedEvent);
       socket.off("totalPatient", handleTotalPatientEvent);
-     
     };
   }, [fetchAppointments, fetchConsultedPatients]);
 
@@ -151,8 +167,14 @@ export const Card = () => {
             {" "}
             Next Appointment <i className="fa-regular fa-clock"></i>
           </span>
-          <h2>{nextPatientDetails?.otherDetails?.Time ?? "No next Appointment"}</h2>
-          <p>{totalWaintingPatients} patient waiting</p>
+          <h2>
+            {nextPatientDetails?.otherDetails?.Time ?? "No next Appointment"}
+          </h2>
+          <p>
+            {totalWaintingPatients > 0
+              ? `${totalWaintingPatients} patient waiting`
+              : null}
+          </p>
         </div>
       </div>
     </div>

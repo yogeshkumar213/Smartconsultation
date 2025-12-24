@@ -22,12 +22,15 @@ const VisuallyHiddenInput = styled("input")({
 export const UploadFile = () => {
   const { currPatientDocument } = useContext(PatientCollectionContext);
   const { docterAPI } = useContext(docterContext);
-  const formData = new FormData();
+
   const [file, setFile] = React.useState([]);
   const { showSnakbar } = useSnackbar();
   console.log("currPatientDocument in AdditionalInfo:", currPatientDocument);
 
   const handleUploadFile = (event) => {
+    console.log("handleUploadFile called");
+    const formData = new FormData();
+
     const selectedFiles = event.target.files;
     console.log(selectedFiles);
     const allowedTypes = [
@@ -53,29 +56,38 @@ export const UploadFile = () => {
       return;
     }
     const appointmentId = currPatientDocument?._id;
-    formData.append("currPatientDocument", JSON.stringify(currPatientDocument._id));
+    formData.append(
+      "currPatientDocument",
+      JSON.stringify(currPatientDocument?._id)
+    );
 
     console.log("Uploading files for Appointment ID:", appointmentId);
     for (let i = 0; i < selectedFiles.length; i++) {
       formData.append("docterAttachedFile", selectedFiles[i]);
     }
     console.log("formData file", formData.getAll("docterAttachedFile"));
+    console.log(
+      "formData currPatientDocument",
+      formData.get("currPatientDocument")
+    );
     // Implement the file upload API call here using docterAPI
-    try {
-      const uploadReport = async () => {
+
+    const uploadReport = async () => {
+      try {
         const res = await docterAPI.post("/uploadReport", formData);
         console.log("Upload Report Response:", res);
         if (res.status === 200) {
           showSnakbar(res.data.message || "File uploaded successfully");
         }
-      };
-      uploadReport();
-    } catch (err) {
-      console.log(err);
-    } finally {
-      formData.delete("docterAttachedFile");
-      event.target.value = null; // Reset the input
-    }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    uploadReport();
+    // finally {
+    //   formData.delete("docterAttachedFile");
+    //   event.target.value = null; // Reset the input
+    // }
   };
 
   return (
