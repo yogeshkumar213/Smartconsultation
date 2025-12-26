@@ -12,7 +12,7 @@ import "./Headder.css";
 import { useEffect } from "react";
 
 export const DocterHeadder = () => {
-  const [border, setborder] = useState(false);
+  const [togle, setTogle] = useState(false);
   const [docter, setDocter] = useState({});
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export const DocterHeadder = () => {
   }, []);
 
   let clickHandler = () => {
-    setborder((prevalue) => !prevalue);
+    setTogle((prevalue) => !prevalue);
   };
 
   return (
@@ -45,20 +45,7 @@ export const DocterHeadder = () => {
             <MailIcon color="action" />
           </Badge>
 
-          <div
-            className="picture-with-name"
-            onClick={clickHandler}
-            style={
-              border
-                ? {
-                    border: "3px solid pink",
-                    borderRadius: "1rem",
-                    padding: "0.2rem",
-                    cursor: "pointer",
-                  }
-                : {}
-            }
-          >
+          <div className="picture-with-name" onClick={clickHandler}>
             <span>
               {" "}
               <Avatar alt="Remy Sharp" src="/docterphoto.jpg" />
@@ -71,15 +58,21 @@ export const DocterHeadder = () => {
               <div style={{ fontSize: "0.8rem" }}>{docter.Specilization}</div>
             </div>
             &nbsp; &nbsp;
-            <i
-              className="fa-solid fa-chevron-up"
-              style={{ paddingRight: "1rem" }}
-            ></i>
-            {border && <Dropdown />}
+            {togle ? (
+              <i
+                className="fa-solid fa-chevron-up"
+                style={{ paddingRight: "1rem" }}
+              ></i>
+            ) : (
+              <i
+                className="fa-solid fa-chevron-down"
+                style={{ paddingRight: "1rem" }}
+              ></i>
+            )}
+            {togle && <Dropdown />}
           </div>
         </div>
       </span>
-      <hr style={{ margin: "0.5rem", opacity: "0.3" }}></hr>
     </>
   );
 };

@@ -1,4 +1,4 @@
-import React ,{useEffect} from "react";
+import React, { useEffect } from "react";
 import { DocterHeadder } from "./Headder.jsx";
 import CardParent from "./CardParent.jsx";
 import SearchBar from "./SearchBar.jsx";
@@ -22,19 +22,16 @@ export default function DocterDash() {
   //   }
   // }, []);
 
-  
   return (
     <>
       {/* {doctoken && ( */}
-        <div className="container" style={{ minHeight: "100vh" }}>
-          <DocterHeadder />
-          <h2>Todays Appointments</h2>
-          <CardParent />
-          <SearchBar />
-
-          <AppointmentList />
-          <SmartConsul />
-        </div>
+      <div className="container " style={{ minHeight: "100vh" }}>
+        <DocterHeadder />
+        <CardParent />
+        <SearchBar />
+        <AppointmentList />
+        <SmartConsul />
+      </div>
       {/* )} */}
     </>
   );

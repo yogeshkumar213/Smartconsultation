@@ -49,7 +49,7 @@ export const Card = () => {
       console.log(err);
     }
   }, []);
-  
+
   useEffect(() => {
     docterActive();
   }, []);
@@ -131,7 +131,8 @@ export const Card = () => {
   }, [fetchAppointments, fetchConsultedPatients]);
 
   return (
-    <div>
+    <div >
+      <h2 >Todays Appointment</h2>
       <div className="card">
         <div className="all3card">
           <span
@@ -140,12 +141,12 @@ export const Card = () => {
               justifyContent: "space-between",
             }}
           >
-            <b>Total Patients</b>
+            <b>Live count</b>
             <i className="fa-regular fa-id-card"></i>
           </span>
 
           <h2>{totalpatient}</h2>
-          <p>approximents today</p>
+          <p>As of today</p>
         </div>
         <div className="all3card">
           <span
@@ -154,7 +155,7 @@ export const Card = () => {
               justifyContent: "space-between",
             }}
           >
-            consulted
+            <b>Consulted Patients</b>
             <i className="fa-solid fa-check"></i>
           </span>
 
@@ -165,7 +166,7 @@ export const Card = () => {
         <div>
           <span style={{ display: "flex", justifyContent: "space-between" }}>
             {" "}
-            Next Appointment <i className="fa-regular fa-clock"></i>
+            <b>Next Appointment</b> <i className="fa-regular fa-clock"></i>
           </span>
           <h2>
             {nextPatientDetails?.otherDetails?.Time ?? "No next Appointment"}

@@ -13,7 +13,7 @@ import "./Patientdash.css";
 export default function PatientHeader() {
   const [zoneTriggered, setZoneTriggered] = useState(false);
   const navigate = useNavigate;
-  const [border, setborder] = useState(false);
+  const [togle, setTogle] = useState(false);
   const [username, setUserName] = useState("");
   const [email, setEmail] = useState("");
   useEffect(() => {
@@ -32,7 +32,7 @@ export default function PatientHeader() {
   }, []);
 
   let clickHandler = () => {
-    setborder((prevalue) => !prevalue);
+    setTogle((prevalue) => !prevalue);
   };
 
   return (
@@ -54,16 +54,7 @@ export default function PatientHeader() {
           <div
             className="picture-with-name"
             onClick={clickHandler}
-            style={
-              border
-                ? {
-                    border: "3px solid pink",
-                    borderRadius: "1rem",
-                    padding: "0.2rem",
-                    cursor: "pointer",
-                  }
-                : {}
-            }
+            
           >
             <span>
               {" "}
@@ -77,17 +68,25 @@ export default function PatientHeader() {
               <div style={{ fontSize: "0.8rem" }}>{email}</div>
             </div>
             &nbsp; &nbsp;
-            <i
-              className="fa-solid fa-chevron-up"
-              style={{ paddingRight: "1rem" }}
-            ></i>
-            <Dropdown visible={border} />
-            {/* {border && (
-            )} */}
+            {togle ? (
+              <i
+                className="fa-solid fa-chevron-up"
+                style={{ paddingRight: "1rem" }}
+              ></i>
+            ) : (
+              <i
+                className="fa-solid fa-chevron-down"
+                style={{ paddingRight: "1rem" }}
+              ></i>
+            )}
+            <Dropdown
+              visible={togle}
+              style={{ height: "30rem", width: "25rem" }}
+            />
           </div>
         </div>
       </span>
-      <hr style={{ margin: "0.5rem", opacity: "0.3" }}></hr>
+      {/* <hr style={{ margin: "0.5rem", opacity: "0.3" }}></hr> */}
     </>
   );
 }

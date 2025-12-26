@@ -78,47 +78,42 @@ const patdel = async (req, res) => {
 const getCurrQueueNum = async (req, res) => {
 
     try {
-        const { docterDepartment } = req.body;
-        console.log("docterDepartment in getCurrQueueNum", docterDepartment);
-        const counter = await Counter.find({
-            docterDepartment: { $in: docterDepartment }
-        });
+    const { docterDepartment } = req.body;
+    console.log("docterDepartment in getCurrQueueNum", docterDepartment);
 
+    // Fetch all counters for requested departments
+    const counters = await Counter.find({
+        docterDepartment: { $in: docterDepartment }
+    });
 
-        console.log("counters in getCurrQueueNum", counter);
-        const result = {};
-        docterDepartment.forEach(dept => {
-            const counter = counter.find(c => c.docterDepartment === dept);
+    console.log("counters in getCurrQueueNum", counters);
 
-            if (!counter || counter.currentQueueNum === 0) {
-                result[dept] = null; // waiting / not started
-            } else {
-                result[dept] = counter.currentQueueNum;
-            }
-        });
-        res.status(200).json({ message: "current queue number fetched successfully", result })
+    const result = {};
 
+    docterDepartment.forEach(dept => {
+        const counter = counters.find(
+            c => c.docterDepartment === dept
+        );
 
+        if (!counter || counter.currentQueueNum === 0) {
+            result[dept] = null; // waiting / not started
+        } else {
+            result[dept] = counter.currentQueueNum;
+        }
+    });
 
-        // const findCurrQueue = async () => {
-        //     await Promise.all(docterDepartment.map(async (dept) => {
-        //         const appointment = await Counter.findOne(
-        //             { docterDepartment: dept.DocterDepartment }
-        //         ).select("currentQueueNum -_id");
-        //         console.log("appointment in getCurrQueueNum", appointment);
-        //         io.emit("currQueueNum", appointment);
-        //         res.status(200).json({ message: "current queue number fetched successfully", appointment }
-        //         )
-        //     }))
-        // }
-        // findCurrQueue();
-        // console.log("findCurrQueue", findCurrQueue);
-    }
+    res.status(200).json({
+        message: "current queue number fetched successfully",
+        result
+    });
 
-    catch (err) {
-        console.log(err);
-        res.status(500).json({ message: "internal server error in getCurrQueueNum" })
-    }
+} catch (error) {
+    console.error("Error in getCurrQueueNum:", error);
+    res.status(500).json({
+        message: "Internal server error"
+    });
+}
+
 }
 
 const updateuserdata = async (req, res) => {

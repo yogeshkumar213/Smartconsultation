@@ -6,26 +6,37 @@
 
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f9f9f9;
-  color: #333;
+  background: linear-gradient(
+    135deg,
+    #eef6ff,
+    /* soft blue */ #f7fbff,
+    /* near white */ #f1f8f6 /* soft mint */
+  );
+  color: #2f3e46;
   line-height: 1.6;
   min-height: 100vh;
 }
-.card .all3card {
+
+/* .card .all3card {
   margin-right: 1rem;
-}
+} */
 .header {
+  position: fixed;
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+
   display: flex;
-  position: sticky;
-  top: 0;
-  /* position: fixed; */
   justify-content: space-between;
-  background-color: white;
-  /* min-width: 100vw; */
   align-items: center;
-  /* padding: 0 2rem; */
-  z-index: 999;
-  /* margin:0 2rem; */
+
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
 }
 
 .picture-with-name {
@@ -88,23 +99,19 @@ body {
   color: blue;
 }
 .card {
-  /* width: 100vw; */
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin: 1rem;
-
-  /* box-shadow: 2rem 4rem 4rem rgba(0, 0, 0, 0.2); */
+  gap: 1rem;
+  margin-top: 1rem;
+  max-width: 100%;
 }
 
 .card div {
   height: 7.7rem;
-  width: 28rem;
   padding: 1rem 1.5rem;
-  border: 1px solid rgb(169, 162, 162, 0.3);
+  border: 1px solid rgba(169, 162, 162, 0.3);
   border-radius: 1rem;
-  /* box-shadow:1px 2px 2rem  rgb(164, 159, 159) ; */
-  justify-content: space-between;
+  flex: 1;
 }
 
 .searchBarr {
@@ -115,7 +122,7 @@ body {
   display: flex;
   align-items: center;
 }
- /* for search   */
+/* for search   */
 /* This will override the autofill background in Chrome/Edge */
 .MuiInputBase-input:-webkit-autofill {
   box-shadow: 0 0 0 1000px white inset !important; /* Use your background color */

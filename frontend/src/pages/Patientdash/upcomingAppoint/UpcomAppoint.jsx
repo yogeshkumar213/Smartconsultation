@@ -22,7 +22,7 @@ export default function UpcomAppoint() {
     } catch (err) {
       console.log(err);
     }
-  }, []);
+  }, [client]);
 
   useEffect(() => {
     fetchUpcomingAppointment();
@@ -35,7 +35,7 @@ export default function UpcomAppoint() {
         ? appointmentFormData.map((app) => app.specilization)
         : [];
     console.log("extractDepartment", extractDepartment);
-    if (!extractDepartment) return;
+    if (!extractDepartment.length === 0) return;
     setLoading(true);
     try {
       const res = await client.post("/getcurrQueueNum", {
@@ -59,13 +59,19 @@ export default function UpcomAppoint() {
 
   useEffect(() => {
     const handler = (data) => {
-      setCurrQueueNum(data.result);
+      console.log("currQueueNum data from socket", data);
+      // setCurrQueueNum(data.result);
+      getCurrNum();
     };
     socket.on("currQueueNum", handler);
     return () => {
       socket.off("currQueueNum", handler);
     };
-  }, []);
+  }, [getCurrNum]);
+
+  useEffect(() => {
+    console.log("fetching curr queue num", currQueueNum);
+  }, [currQueueNum]);
 
   useEffect(() => {
     if (appointmentFormData.length > 0) {
@@ -103,11 +109,9 @@ export default function UpcomAppoint() {
                   }}
                 >
                   CurrQueue <b>:</b> &nbsp;&nbsp;
-                  {currQueueNum[app.specilization] != undefined
-                    ? currQueueNum[app.specilization]
-                    : loading
-                    ? "Loading..."
-                    : "Not started yet"}
+                  {currQueueNum[app.specilization] === null
+                    ? "waiting..."
+                    : currQueueNum[app.specilization]}
                 </p>
               </div>
 

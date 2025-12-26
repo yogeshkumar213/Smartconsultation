@@ -14,16 +14,16 @@ body {
 
 .header {
   display: flex;
-  position: sticky;
+  position: fixed;
   top: 0;
-  /* position: fixed; */
+
   justify-content: space-between;
   background-color: white;
-  /* min-width: 100vw; */
+
   align-items: center;
-  /* padding: 0 2rem; */
+  height: 60px;
+
   z-index: 999;
-  /* margin:0 2rem; */
 }
 
 .picture-with-name {
@@ -50,23 +50,15 @@ body {
   width: 12rem;
   background-color: white;
   border-radius: 1.6rem;
-  /* margin:2rem; */
-  margin-top: 2rem;
-  margin-right: 3rem;
-  /* display: block;
-  justify-content: center;
-  align-items: center; */
   padding: 0.6rem;
-  position: absolute;
-  cursor: "pointer";
-  /* right:0; */
-  transform: translateX(-100%);
-
-  z-index: 1000;
-
-  /* border: 1px solid rgb(52, 47, 47); */
+  position: absolute; 
+  top: 3rem;  
+  /* right: 0.1rem;  */
+  z-index: 2000;
   box-shadow: 2px 4px 14px rgba(0, 0, 0, 0.2);
+  transform: none;
 }
+
 
 .dropdown-menu i {
   padding: 0.8rem;
@@ -84,6 +76,7 @@ body {
   align-items: center;
 }
 .patient-dashboard {
+  padding-top: 3rem;
   display: flex;
   justify-content: space-between;
 }
@@ -99,7 +92,6 @@ body {
   /* background-color: red; */
   padding: 1rem 1rem 0 2rem;
   overflow: hidden;
-  
 
   overflow-x: auto;
   border: 1px solid rgb(216, 214, 222);
@@ -170,29 +162,27 @@ body {
   border-radius: 1rem;
   border: 1px solid rgb(216, 214, 222);
 }
-.profiledetls{
+.profiledetls {
   margin: 2rem;
-
 }
-.row{
+.row {
   display: flex;
-  gap:5rem;
+  gap: 5rem;
   margin-bottom: 1rem;
   margin-top: 2rem;
 }
-.field{
-  flex:1;
+.field {
+  flex: 1;
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
 }
-.row .field input{
+.row .field input {
   padding: 0.8rem;
   background-color: white;
   border-radius: 0.8rem;
   color: black;
   font-size: 1rem;
   font-weight: 600;
- 
 }
 
 .symtomsSub {
@@ -245,7 +235,6 @@ body {
   background-color: rgb(149, 149, 157);
   padding: 1rem;
 } */
-
 
 .item:hover {
   background-color: #e0e0e0;
