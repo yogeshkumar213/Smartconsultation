@@ -84,7 +84,7 @@ export default function UpcomAppoint() {
       <div className="appointmentContainer">
         <h2>Upcoming Appointments</h2>
 
-        {appointmentFormData.length > 0 &&
+        {appointmentFormData?.length > 0 &&
           appointmentFormData?.map((app, index) => (
             <div className="appointmentSchedule" key={index}>
               <div

@@ -8,6 +8,7 @@ import { useSnackbar } from "../../../context/Snakbarr";
 import { useAuth } from "../../../context/AuthContext";
 import { UpComingAppointmentContext } from "../../../context/PatientFormContext";
 import { useContext } from "react";
+import AppointmentProgress from "./AppointmentProgress";
 
 export const AudioRecorderComponent = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -16,6 +17,7 @@ export const AudioRecorderComponent = () => {
   const { appointmentFormData, setAppointmentFormData } = useContext(
     UpComingAppointmentContext
   );
+  const [togle, setTogle] = useState(false);
 
   const {
     formData,
@@ -88,6 +90,7 @@ export const AudioRecorderComponent = () => {
     if (formData.PatientAudio) {
       formData1.append("PatientAudio", formData.PatientAudio);
     }
+    setTogle(true);
 
     try {
       console.log("formData1", formData1.PatientFile);
@@ -101,7 +104,7 @@ export const AudioRecorderComponent = () => {
       console.log(result);
       showSnakbar("Appointment submitted successfully");
       setAppointmentFormData(result?.data?.appointment);
-      
+
       // console.log("appointment booked");
 
       setAppointmentController(false);
@@ -124,6 +127,7 @@ export const AudioRecorderComponent = () => {
         PatientAudio: null,
         PatientFile: [],
       }));
+      setTogle(false);
     }
   };
 
@@ -161,6 +165,7 @@ export const AudioRecorderComponent = () => {
 
   return (
     <div className="symtomsSub">
+      {togle && <AppointmentProgress open={togle} setOpen={setTogle} />}
       <h2>Submit your Symptoms</h2>
       <p>
         Please record a brief audio describing your symptoms to assist your

@@ -8,10 +8,12 @@ import Button from "@mui/material/Button";
 import SelectTime from "./Appointment/SelectTime";
 import { useFormData } from "../../context/PatientFormContext";
 import { useSnackbar } from "../../context/Snakbarr";
+
 import dayjs from "dayjs";
 
 export default function BasicDateCalendar() {
   const [appointDate, setAppointDate] = useState("");
+
   const {
     formData,
     setFormData,
@@ -21,7 +23,7 @@ export default function BasicDateCalendar() {
   const { showSnakbar } = useSnackbar();
 
   const appointmenthandler = () => {
-    console.log("formData",formData);
+    console.log("formData", formData);
     // try {
     if (
       formData.Patient &&
@@ -30,7 +32,8 @@ export default function BasicDateCalendar() {
       formData.Time &&
       formData.PatientAudio
     ) {
-      console.log("all value are set",formData);
+      console.log("all value are set", formData);
+     
 
       setAppointmentController(true);
       // showSnakbar("Appointment Booked");
@@ -44,21 +47,26 @@ export default function BasicDateCalendar() {
     //   showSnakbar(err);
     // }
   };
-  React.useEffect(()=>{
-    if(formData.Date && !formData.Docter){
-      alert("please select docter first for which you want to schedule appointment")
+  React.useEffect(() => {
+    if (formData.Date && !formData.Docter) {
+      alert(
+        "please select docter first for which you want to schedule appointment"
+      );
     }
-  },[formData.Date]);
+  }, [formData.Date]);
   const handleDateChange = (value) => {
     console.log(value);
     // const date = value.$d;
     // const newDate = date.toDateString();
     const newDate = value.format("YYYY-MM-DD");
-    console.log("newDate",newDate);
-    const currentDate=new Date().toISOString().split("T")[0];
-    console.log("currentDate",currentDate);
-    if(newDate<currentDate){ //using < and > now our string will compare in dictionary order like jab tak difference naa mille string mai "Apple" vs "Banana" sbse phle "A" and "B" compare honge 'A' < 'B' true (yhi comparision ruk jayega because difference mil gya(mtlb dono word alag alag hai ))
-      alert("Please select today's date or a future date for your appointment.");
+    console.log("newDate", newDate);
+    const currentDate = new Date().toISOString().split("T")[0];
+    console.log("currentDate", currentDate);
+    if (newDate < currentDate) {
+      //using < and > now our string will compare in dictionary order like jab tak difference naa mille string mai "Apple" vs "Banana" sbse phle "A" and "B" compare honge 'A' < 'B' true (yhi comparision ruk jayega because difference mil gya(mtlb dono word alag alag hai ))
+      alert(
+        "Please select today's date or a future date for your appointment."
+      );
       return;
     }
     setAppointDate(newDate);
@@ -88,8 +96,10 @@ export default function BasicDateCalendar() {
             margin: "1rem",
           }}
         >
-          <DateCalendar value={formData.Date} onChange={handleDateChange}/>
-          {formData.Date && formData.Docter && <SelectTime Date={formData.Date} Docter={formData.Docter}/>}
+          <DateCalendar value={formData.Date} onChange={handleDateChange} />
+          {formData.Date && formData.Docter && (
+            <SelectTime Date={formData.Date} Docter={formData.Docter} />
+          )}
           <Button
             variant="contained"
             style={{ width: "100%" }}

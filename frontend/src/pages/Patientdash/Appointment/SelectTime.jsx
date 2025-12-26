@@ -5,6 +5,9 @@ import "../Patientdash.css";
 import { useFormData } from "../../../context/PatientFormContext";
 import FormControl from "@mui/material/FormControl";
 import { AgeGender } from "./AgeGender";
+import Stack from "@mui/material/Stack";
+import CircularProgress from "@mui/material/CircularProgress";
+
 export default function SelectTime({ Date, Docter }) {
   const [prescheduledtime, setPrescheduledTime] = useState([]);
   const [appointtime, setAppointTime] = useState("");
@@ -12,12 +15,15 @@ export default function SelectTime({ Date, Docter }) {
 
   const [age, setAge] = React.useState("");
   const [gender, setGender] = useState("");
+  const [time, setTime] = useState(false);
 
   const handleGenderChange = (event) => {
     setGender(event.target.value);
   };
   const { formData, setFormData } = useFormData();
   useEffect(() => {
+    setTime(true);
+
     client
       .post("http://localhost:5050/api/v1/getappointtime", {
         Date: Date,
@@ -25,10 +31,12 @@ export default function SelectTime({ Date, Docter }) {
       })
       .then((res) => {
         console.log(res);
+        setTime(false);
         setPrescheduledTime(res.data.message);
       })
       .catch((err) => {
         console.log(err);
+        setTime(false);
       });
   }, [formData.Date]);
   // const handleChange = (event) => {
@@ -58,35 +66,46 @@ export default function SelectTime({ Date, Docter }) {
         color: "black",
       }}
     >
-      {prescheduledtime.length!=0
-        ? prescheduledtime.map((item) => {
-            return (
-              // <div>
-              <div
-                key={item}
-                className="item"
-                onClick={() => handleTime(item)}
-                value={formData.Time}
-                style={{
-                  display: "flex",
-                  border: "1px solid black",
-                  padding: "0.2rem 1rem",
-                  borderRadius: "3rem",
-                  margin: "0.4rem",
-                  fontSize: "0.8rem",
-                  cursor: "pointer",
-                  ...(appointtime == item
-                    ? { backgroundColor: "#1976d2" }
-                    : {}),
-                }}
-              >
-                {item}
-              </div>
+      {time ? (
+        <Stack
+          sx={{ color: "grey.500", width: "100%",  }}
+          alignItems="center"
+          justifyItems="center"
+        >
+          <CircularProgress color="success" />
+        </Stack>
+      ) : prescheduledtime?.length !== 0 ? (
+        prescheduledtime?.map((item) => {
+          return (
+            <div
+              key={item}
+              className="item"
+              onClick={() => handleTime(item)}
+              value={formData.Time}
+              style={{
+                display: "flex",
+                border: "1px solid black",
+                padding: "0.2rem 1rem",
+                borderRadius: "3rem",
+                margin: "0.4rem",
+                fontSize: "0.8rem",
+                cursor: "pointer",
+                ...(appointtime === item
+                  ? { backgroundColor: "#1976d2", color: "#fff" }
+                  : {}),
+              }}
+            >
+              {item}
+            </div>
+          );
+        })
+      ) : (
+        <p className="text-red-500 font-medium">
+          The doctor's schedule is full for today. Please select a different
+          day.
+        </p>
+      )}
 
-              // </div>
-            );
-          })
-        : <p className="text-red-500 font-medium">The doctor's schedule is full for today. Please select a different day.</p>}
       {appointtime && (
         <div className="mt-8 ">
           <AgeGender

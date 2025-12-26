@@ -78,41 +78,41 @@ const patdel = async (req, res) => {
 const getCurrQueueNum = async (req, res) => {
 
     try {
-    const { docterDepartment } = req.body;
-    console.log("docterDepartment in getCurrQueueNum", docterDepartment);
+        const { docterDepartment } = req.body;
+        console.log("docterDepartment in getCurrQueueNum", docterDepartment);
 
-    // Fetch all counters for requested departments
-    const counters = await Counter.find({
-        docterDepartment: { $in: docterDepartment }
-    });
+        // Fetch all counters for requested departments
+        const counters = await Counter.find({
+            docterDepartment: { $in: docterDepartment }
+        });
 
-    console.log("counters in getCurrQueueNum", counters);
+        console.log("counters in getCurrQueueNum", counters);
 
-    const result = {};
+        const result = {};
 
-    docterDepartment.forEach(dept => {
-        const counter = counters.find(
-            c => c.docterDepartment === dept
-        );
+        docterDepartment.forEach(dept => {
+            const counter = counters.find(
+                c => c.docterDepartment === dept
+            );
 
-        if (!counter || counter.currentQueueNum === 0) {
-            result[dept] = null; // waiting / not started
-        } else {
-            result[dept] = counter.currentQueueNum;
-        }
-    });
+            if (!counter || counter.currentQueueNum === 0) {
+                result[dept] = null; // waiting / not started
+            } else {
+                result[dept] = counter.currentQueueNum;
+            }
+        });
 
-    res.status(200).json({
-        message: "current queue number fetched successfully",
-        result
-    });
+        res.status(200).json({
+            message: "current queue number fetched successfully",
+            result
+        });
 
-} catch (error) {
-    console.error("Error in getCurrQueueNum:", error);
-    res.status(500).json({
-        message: "Internal server error"
-    });
-}
+    } catch (error) {
+        console.error("Error in getCurrQueueNum:", error);
+        res.status(500).json({
+            message: "Internal server error"
+        });
+    }
 
 }
 
@@ -225,9 +225,9 @@ const getAllUpcomingAppointment = async (req, res) => {
 
 }
 const appointment = async (req, res) => {
-    // const patientToken=req.headers.authorization.split(" ")[1];
+    const patientToken = req.headers.authorization.split(" ")[1];
 
-    // console.log("headers",);
+    console.log("headers",);
     const { io } = await import('../../app.js');
     console.log("take appointment");
     console.log("reqbody is ", req.body);
@@ -358,6 +358,7 @@ const appointment = async (req, res) => {
         console.log("Error", err);
         res.status(500).json({ message: "internale server Error", error: err.message })
     }
+
 
 
 }
