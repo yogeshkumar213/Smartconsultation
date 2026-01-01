@@ -3,10 +3,10 @@ import PatientDash from "./pages/Patientdash/PatientParent.jsx";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import DocterDash from "./pages/docterdash/DocterParent.jsx";
-import { Test } from "./pages/Patientdash/test.jsx";
+
 import { ProfileDetails } from "../src/pages/Patientdash/UserProfile/UserProfile.jsx";
 
-import { Dropdown } from "./pages/Patientdash/Dropdown.jsx";
+// import { Dropdown } from "./pages/Patientdash/Dropdown.jsx";
 import { DropdownProvider } from "./context/DropdownContext.jsx";
 
 import AuthParent from "./pages/Authentication/AuthParent.jsx";
