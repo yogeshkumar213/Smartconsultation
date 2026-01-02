@@ -16,7 +16,7 @@ import {
 } from "../../../context/DocterAuthContext";
 
 import { margin, minWidth, width } from "@mui/system";
-import patientCompleted from "../../../../src/assets/patientcompleted.json";
+import patientCompleted from "../../../../src/assets/patientCompleted.json";
 import DotLoader from "../../../../src/assets/Dotrecordinglightred.json";
 export const nextPatientContext = createContext();
 export const NextPatientContextProvider = ({ children }) => {
