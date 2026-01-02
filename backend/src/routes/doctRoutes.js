@@ -5,7 +5,7 @@ import axios from "axios";
 import { Docter } from "../models/docter.js";
 import jwt from "jsonwebtoken"
 import { User } from "../models/user.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { verifyDocter } from "../controllers/mongoManeger.js";
 import { Appointment } from "../models/appointment.js";
 import { io } from "../../app.js";
