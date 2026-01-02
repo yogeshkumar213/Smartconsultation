@@ -13,6 +13,7 @@ import AuthParent from "./pages/Authentication/AuthParent.jsx";
 
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { SnakbarProvider } from "./context/Snakbarr.jsx";
+import { Navigate } from "react-router-dom";
 import { DepartmentProvider } from "./pages/Patientdash/Department.jsx";
 import { SearchProvider } from "./pages/Patientdash/Searchbar.jsx";
 import { PatientFormProvider } from "./context/PatientFormContext.jsx";
@@ -58,9 +59,15 @@ function App() {
                                 element={<PatientDash />}
                               ></Route>
                               <Route
+                                path="/"
+                                element={<Navigate to="/auth/signin" replace/>}
+                              ></Route>
+                              <Route
                                 path="/auth/*"
                                 element={<AuthParent />}
-                              ></Route>
+                              >
+
+                              </Route>
 
                               {/* docter routes */}
 
