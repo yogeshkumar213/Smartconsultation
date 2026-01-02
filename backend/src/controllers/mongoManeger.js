@@ -3,7 +3,7 @@ import { User } from '../models/user.js';
 import { Appointment } from "../models/appointment.js";
 import mongoose from 'mongoose';
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import status from "http-status"
 
 import dotenv from "dotenv";
