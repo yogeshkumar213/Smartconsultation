@@ -60,7 +60,7 @@ console.log(token);
 
 export const docterContext = createContext();
 const docterAPI = axios.create({
-  baseURL: "http://localhost:5050/doc/v1",
+  baseURL: "https://smartconsultation.onrender.com/doc/v1",
   headers: { doctoken: token },
 });
 docterAPI.interceptors.request.use((config) => {

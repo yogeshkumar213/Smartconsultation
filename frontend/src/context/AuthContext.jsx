@@ -12,7 +12,7 @@ import axios from "axios";
 // import DocterDash from "../pages/DocterDash";
 
 const client = axios.create({
-  baseURL: "http://localhost:5050/api/v1",
+  baseURL: "https://smartconsultation.onrender.com/api/v1",
   withCredentials: true,
 });
 const decodeJWT = jwtDecode;
@@ -39,7 +39,7 @@ client.interceptors.response.use(
       originalRequest._retry = true;
       try {
         const res = await axios.post(
-          "http://localhost:5050/api/v1/refresh",
+          "https://smartconsultation.onrender.com/api/v1/refresh",
           {},
           {
             withCredentials: true,

@@ -18,7 +18,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://smartconsultation-l9fa.vercel.app/",
+    origin: "https://smartconsultation-l9fa.vercel.app",
     methods: ["GET", "POST"],
     credentials: true
 
@@ -50,7 +50,7 @@ io.on("connection", async (socket) => {
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors({
-    origin: "http://localhost:5173",  // Your frontend's address
+    origin: "https://smartconsultation-l9fa.vercel.app",  // Your frontend's address
   credentials: true, 
 }));
 app.use(cookieParser());

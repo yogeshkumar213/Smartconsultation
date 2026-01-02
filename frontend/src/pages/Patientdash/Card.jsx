@@ -25,7 +25,7 @@ export const Card = () => {
   const { showSnakbar } = useSnackbar();
 
   const client = axios.create({
-    baseURL: "http://localhost:5050/api/v1",
+    baseURL: "https://smartconsultation.onrender.com/api/v1",
   });
 
   client.interceptors.request.use((config) => {

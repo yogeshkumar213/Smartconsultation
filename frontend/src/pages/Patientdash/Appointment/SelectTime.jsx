@@ -25,7 +25,7 @@ export default function SelectTime({ Date, Docter }) {
     setTime(true);
 
     client
-      .post("http://localhost:5050/api/v1/getappointtime", {
+      .post("https://smartconsultation.onrender.com/api/v1/getappointtime", {
         Date: Date,
         Docter: Docter,
       })
