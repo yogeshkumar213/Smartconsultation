@@ -9,9 +9,9 @@ const AuthParent = () => {
     <AuthProvider>
       <div style={{ display: "flex" ,justifyContent:"center",alignItems:"center",minHeight:"100vh"}}>
         <Routes>
-          <Route path="/signup" element={<SignupAuth />}></Route>
+          <Route path="signup" element={<SignupAuth />}></Route>
 
-          <Route path="/signin" element={<SigninAuth />}></Route>
+          <Route path="signin" element={<SigninAuth />}></Route>
         </Routes>
         {/* <SignupAuth/>
         <SigninAuth/> */}
